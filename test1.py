@@ -38,13 +38,10 @@ def server_recv(myserverport):
         arr.add((l[0]+"\n",l[1]))
         
 
-def client_connect_recv(client_sockets,clientnames,clientports):
-   for i in range (len(client_sockets)):
-       client_sockets[i].connect((clientnames[i], clientports[i]))
+def client_connect_recv(client_sockets_recv,clientnames,clientports):
+   for i in range (len(client_sockets_recv)):
+       client_sockets_recv[i].connect((clientnames[i], clientports[i]))
        
-def client_connect_send(client_sockets,clientnames,clientports):
-   for i in range (len(client_sockets)):
-       client_sockets[i].connect((clientnames[i], clientports[i]))
     
 
 
@@ -77,7 +74,6 @@ def main():
     ts=time.time()
     server_connect(servername,serverport)
     client_connect_recv(client_sockets_recv,clientnames,my_client_ports_recv)
-    client_connect_send(client_sockets_send,clientnames,my_client_ports_send)
     t1 = threading.Thread(server_recv,my_server_port)
     recv_t = [t1]
     send_t = []
@@ -97,18 +93,17 @@ def main():
 
         
     t1.start()
-
     for i in range (len(client_sockets_send)):
         send_thread[i].start()
     for i in range (len(client_sockets_recv)):
         recv_thread[i].start()
         
-    
+    t1.join()
     for i in range (len(client_sockets_send)):
         send_thread[i].join()
     for i in range (len(client_sockets_recv)):
         recv_thread[i].join()
-    t1.join()
+
         
 
     Socket_server.close()
