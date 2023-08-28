@@ -78,15 +78,14 @@ def main():
     cleint_bind_send(client_sockets_send, my_client_ports_send)
     time.sleep(5)
     client_connect_recv(client_sockets_recv,clientnames,my_client_ports_recv)
-    t1 = threading.Thread(server_recv,my_server_port)
+    t1 = threading.Thread(target=server_recv,args=(my_server_port,))
     recv_t = []
     send_t = []
     for i in range (len(my_client_ports_recv)):
-        recv_t.append(threading.Thread(client_recv,i))
+        recv_t.append(threading.Thread(target=client_recv,args=(i,)))
         
     for i in range (len(my_client_ports_send)):
-        send_t.append(threading.Thread(client_send,i)) 
-
+        send_t.append(threading.Thread(target=client_send,args=(i,)))
         
     t1.start()
     for i in range (len(client_sockets_send)):
