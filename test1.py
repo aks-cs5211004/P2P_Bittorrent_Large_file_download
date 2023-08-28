@@ -5,7 +5,7 @@ from socket import *
 servername='vayu.iitd.ac.in'
 serverport=9801
 my_server_port=2048
-my_client_ports_recv=[2049]
+my_client_ports_recv=[3050]
 my_client_ports_send=[2050]
 most_recent = ("0","")
 
@@ -23,11 +23,11 @@ for i in range (len(clientnames)):
 def server_connect(servername,serverport):
     Socket_server.connect((servername, serverport))
 
-def server_recv(myserverport):
+def server_recv(my_server_port):
     while (len(arr) < 1000):
         sentence = "SENDLINE\n"
         Socket_server.send(sentence.encode())
-        str=Socket_server.recv(myserverport).decode()
+        str=Socket_server.recv(my_server_port).decode()
         for i in range(len(str)):
             if(str[i]=="\n"):
                 index=i
@@ -76,6 +76,7 @@ def main():
     ts=time.time()
     server_connect(servername,serverport)
     cleint_bind_send(client_sockets_send, my_client_ports_send)
+    time.sleep(5)
     client_connect_recv(client_sockets_recv,clientnames,my_client_ports_recv)
     t1 = threading.Thread(server_recv,my_server_port)
     recv_t = [t1]
@@ -86,7 +87,6 @@ def main():
     for i in range (len(my_client_ports_send)):
         send_t.append(threading.Thread(client_send,i)) 
 
-    t1 = threading.Thread(target=server_recv, args=(my_server_port,))
     send_thread = []
     recv_thread = []
     for i in range (len(client_sockets_recv)):
