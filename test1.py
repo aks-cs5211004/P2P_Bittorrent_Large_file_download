@@ -4,7 +4,7 @@ from socket import *
 
 servername='vayu.iitd.ac.in'
 serverport=9801
-my_server_port=2048
+my_server_port=2047
 my_client_ports_recv=[3050]
 my_client_ports_send=[2050]
 most_recent = ("0","")
@@ -79,7 +79,7 @@ def main():
     time.sleep(5)
     client_connect_recv(client_sockets_recv,clientnames,my_client_ports_recv)
     t1 = threading.Thread(server_recv,my_server_port)
-    recv_t = [t1]
+    recv_t = []
     send_t = []
     for i in range (len(my_client_ports_recv)):
         recv_t.append(threading.Thread(client_recv,i))
@@ -87,33 +87,24 @@ def main():
     for i in range (len(my_client_ports_send)):
         send_t.append(threading.Thread(client_send,i)) 
 
-    send_thread = []
-    recv_thread = []
-    for i in range (len(client_sockets_recv)):
-        recv_thread.append(threading.Thread(target=client_recv,args=(i,)))
-    for i in range (len(client_sockets_send)):
-        send_thread.append(threading.Thread(target=client_send,args=(i,)))
-
         
     t1.start()
     for i in range (len(client_sockets_send)):
-        send_thread[i].start()
+        send_t[i].start()
     for i in range (len(client_sockets_recv)):
-        recv_thread[i].start()
+        recv_t[i].start()
         
     t1.join()
     for i in range (len(client_sockets_send)):
-        send_thread[i].join()
+        send_t[i].join()
     for i in range (len(client_sockets_recv)):
-        recv_thread[i].join()
+        recv_t[i].join()
 
         
 
     Socket_server.close()
     for i in range (len(client_sockets_recv)):
         client_sockets_recv[i].close()
-    for i in range (len(client_sockets_send)):
-        client_sockets_send[i].close()
     te=time.time()
 #     print(arr)
     print(len(arr))
