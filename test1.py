@@ -9,7 +9,7 @@ my_client_ports_recv=[2049]
 my_client_ports_send=[2050]
 most_recent = ("0","")
 
-clientnames=["10.184.16.83"]
+clientnames=["10.184.63.175"]
 arr=set([])
 Socket_server = socket(AF_INET, SOCK_STREAM)
 client_sockets_recv = []
@@ -42,8 +42,12 @@ def client_connect_recv(client_sockets_recv,clientnames,clientports):
    for i in range (len(client_sockets_recv)):
        client_sockets_recv[i].connect((clientnames[i], clientports[i]))
        
-    
 
+def cleint_bind_send(my_client_send):
+    for i in range (len(my_client_send)):
+        client_sockets_send[i].bind(('', my_client_ports_send[i]))
+        client_sockets_send[i].listen(5)
+       
 
 def client_recv(i):
     while (len(arr) < 1000):
@@ -62,8 +66,6 @@ def client_recv(i):
         
 def client_send(i):
     while (True):    
-        client_sockets_send[i].bind(('', my_client_ports_send[i]))
-        client_sockets_send[i].listen(1)
         connectionSocket,addr=client_sockets_send[i].accept()
         sentence = connectionSocket.recv(client_sockets_send[i]).decode()
         if (sentence == "SENDLINE\n"): 
@@ -73,6 +75,7 @@ def client_send(i):
 def main():
     ts=time.time()
     server_connect(servername,serverport)
+    cleint_bind_send(my_client_ports_send)
     client_connect_recv(client_sockets_recv,clientnames,my_client_ports_recv)
     t1 = threading.Thread(server_recv,my_server_port)
     recv_t = [t1]
