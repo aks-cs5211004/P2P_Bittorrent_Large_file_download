@@ -6,7 +6,7 @@ servername='vayu.iitd.ac.in'
 serverport=9801
 my_server_port=2048
 my_client_ports=[2049]
-# most_recent = ("0","")
+most_recent = ("0","")
 
 clientnames=["10.184.60.82"]
 arr=set([])
@@ -29,7 +29,7 @@ def server_recv(myserverport):
                 index=i
                 break
         l=[str[0:index],str[index+1:]]   
-        # most_recent=(l[0]+"\n",l[1]+"\n")
+        most_recent=(l[0]+"\n",l[1])
         print(l)
         arr.add((l[0]+"\n",l[1]))
         
@@ -37,13 +37,24 @@ def server_recv(myserverport):
 def client_connect(client_sockets,clientnames,clientports):
    for i in range (len(client_sockets)):
        client_sockets[i].connect((clientnames[i], clientports[i]))
+    
+
 
 def client_recv(i):
     while (len(arr) < 1000):
         sentence = str('SENDLINE\n')
         client_sockets[i].send(sentence.encode())
-        line=client_sockets[i].recv(my_client_ports[i])
-    
+        str=client_sockets[i].recv(my_client_ports[i]).decode()
+        for i in range(len(str)):
+            if(str[i]=="\n"):
+                    index=i
+                    break
+        l=[str[0:index],str[index+1:]]   
+        most_recent=(l[0]+"\n",l[1])
+        print(l)
+        arr.add((l[0]+"\n",l[1]))
+        
+        
 def client_send(i):
     while (True):    
         client_sockets[i].bind(('', my_client_ports[i]))
@@ -51,12 +62,14 @@ def client_send(i):
         connectionSocket,addr=client_sockets[i].accept()
         sentence = connectionSocket.recv(client_sockets[i]).decode()
         if (sentence == "SENDLINE\n"): 
-            connectionSocket.send(most_recent[0].encode())
-            connectionSocket.send(most_recent[1].encode())
+            str=most_recent[0]+"\n"+most_recent[1]
+            connectionSocket.send(str.encode())
 
 def main():
     ts=time.time()
     server_connect(servername,serverport)
+    client_connect(client_sockets,clientnames,my_client_ports)
+    
 #     client_connect(client_sockets,clientnames,my_client_ports)
 #     t1 = threading.Thread(server_recv,my_server_port)
 #     recv_t = [t1]
@@ -83,9 +96,10 @@ def main():
 #         recv_thread[i].start()
 
 
+
     Socket_server.close()
-#     for i in range (len(client_sockets)):
-#         client_sockets[i].close()
+    for i in range (len(client_sockets)):
+        client_sockets[i].close()
     te=time.time()
 #     print(arr)
     print(len(arr))
