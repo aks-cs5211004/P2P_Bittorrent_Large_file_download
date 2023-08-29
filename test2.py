@@ -44,10 +44,11 @@ def server_recv():
         st=server_socket.recv(server_line_recv_port).decode()
         index=0
         for j in range(len(st)):
-            if(str[j]=="\n"):
+            if(st[j]=="\n"):
                 index=j
                 break
-        most_recent=(int(str[0:index]),str[index:])
+        global most_recent
+        most_recent=(int(st[0:index]),st[index:])
         print("Received from server= ", most_recent[0])
         arr.add(most_recent)
         
@@ -56,6 +57,7 @@ def server_recv():
 def make_me_server():
         me_as_server_socket.bind(('', me_as_server_port))
         me_as_server_socket.listen(10000)
+        
 def peer_send():
     while (True):    
         connectionSocket,addr=me_as_server_socket.accept()
@@ -72,6 +74,7 @@ def peers_connect_to_recv():
    for i in range (len(peernames)):
        peer_sockets_recv[i].connect((peernames[i], peer_s_server_ports[i]))
        print("connection succesful")   
+       
 def peer_recv(i):
     while (len(arr) < 1000):
         sentence = "SENDLINE\n"
@@ -79,18 +82,19 @@ def peer_recv(i):
         st=peer_sockets_recv[i].recv(line_recv_port[i]).decode()
         index=0
         for j in range(len(st)):
-            if(str[j]=="\n"):
+            if(st[j]=="\n"):
                 index=j
                 break
-        most_recent=(int(str[0:index]),str[index:])
+
+        most_recent=(int(st[0:index]),st[index:])
         print("Received from server= ", most_recent[0])
         arr.add(most_recent)
         
 
 def main():
     ts=time.time()
-    
-    #Make Initial connections????????
+
+    #Make Initial connections
     server_connect()
     make_me_server()
     time.sleep(5)
