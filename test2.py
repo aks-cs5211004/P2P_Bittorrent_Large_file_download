@@ -48,10 +48,12 @@ def server_recv():
             if(not st[j].isdigit()):
                 index=j
                 break
-        global most_recent
-        most_recent=(int(st[0:index]),st[index:])
-        print("Received from server= ", most_recent[0])
-        arr.add(most_recent)
+        
+        if (st[0] != "-"):
+            global most_recent
+            most_recent=(int(st[0:index]),st[index:])
+            print("Received from server= ", most_recent[0])
+            arr.add(most_recent)
         
         
 #ME AS SERVER FUNCTIONS
