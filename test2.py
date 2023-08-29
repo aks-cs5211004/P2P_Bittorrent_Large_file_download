@@ -28,7 +28,7 @@ for i in range (len(peernames)):
 
 
 #Data Structures
-most_recent = ("0","Heloo")
+most_recent = ("Heloo")
 arr=set([])
 
 
@@ -43,18 +43,18 @@ def server_recv():
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
         st=server_socket.recv(server_line_recv_port).decode()
-        index=0
     
-        for j in range(len(st)):
-            if(not st[j].isdigit()):
-                index=j
-                break
+        # for j in range(len(st)):
+        #     if(not st[j].isdigit()):
+        #         index=j
+        #         break
         
-        if (index != 0):
+        if (st[0]!="-"):
             global most_recent
-            most_recent=(st[0:index],st[index:])
-            # print("Received from server",most_recent[0])
-            # print("size of array tilll now: ", len(arr))
+            most_recent=st
+            # most_recent=(st[0:index],st[index:])
+            # # print("Received from server",most_recent[0])
+            # # print("size of array tilll now: ", len(arr))
             arr.add(most_recent)
         
         
@@ -69,8 +69,7 @@ def peer_send():
         while True:
             sentence = connectionSocket.recv(sendline_recv_send_line_port).decode()
             if (sentence == "SENDLINE\n"): 
-                st=most_recent[0]+most_recent[1]
-                connectionSocket.send(st.encode())
+                connectionSocket.send(most_recent.encode())
                 # connectionSocket.close()    
         
         
@@ -86,19 +85,18 @@ def peer_recv(i):
         sentence = "SENDLINE\n"
         peer_sockets_recv[i].send(sentence.encode())
         st=peer_sockets_recv[i].recv(line_recv_port[i]).decode()
-        index=0
-        for j in range(len(st)):
-            if(not st[j].isdigit()):
-                index=j
-                break
-
-        if (index != 0):
-            global most_recent
-            most_recent=(st[0:index],st[index:])
-            # print("Received from server",most_recent[0])
-            # print("size of array tilll now: ", len(arr))
-            arr.add(most_recent)
+        # for j in range(len(st)):
+        #     if(not st[j].isdigit()):
+        #         index=j
+        #         break
         
+        if (st[0]!="-"):
+            global most_recent
+            most_recent=st
+            # most_recent=(st[0:index],st[index:])
+            print("Received from peer")
+            # # print("size of array tilll now: ", len(arr))
+            arr.add(most_recent)
 
 def main():
     ts=time.time()
@@ -124,7 +122,7 @@ def main():
     for i in range (len(peernames)):
         peer_rec_thread[i].start()
 
-    #Join all threads
+    # #Join all threads
     server_thread.join()
     send_thread.join()
     for i in range (len(peernames)):
@@ -141,7 +139,9 @@ def main():
     te=time.time()
     lst=[]
     for items in (arr):
-          lst.append(items[0])
+        if(items[0]=="7" or items[0]=="141"):
+            print(items[1])
+          
     lst.sort()
     print(lst)
     print(te-ts)
