@@ -8,6 +8,8 @@ serverport=9801
 server_line_recv_port=2500
 server_socket = socket(AF_INET, SOCK_STREAM)
 
+#locks
+lock=threading.Lock()
 
 #Me acting as server
 #   SWAP HERE
@@ -40,6 +42,7 @@ def server_connect():
     
 def server_recv():
     while (len(arr) < 1001):
+        lock.acquire()
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
         st=server_socket.recv(server_line_recv_port).decode()
@@ -56,6 +59,7 @@ def server_recv():
             # # print("Received from server",most_recent[0])
             # # print("size of array tilll now: ", len(arr))
             arr.add(most_recent)
+        lock.release()
         
         
 #ME AS SERVER FUNCTIONS
@@ -67,10 +71,12 @@ def peer_send():
     while (True):
         connectionSocket,addr=me_as_server_socket.accept()
         while True:
+            lock.acquire()
             sentence = connectionSocket.recv(sendline_recv_send_line_port).decode()
             if (sentence == "SENDLINE\n"): 
                 connectionSocket.send(most_recent.encode())
                 # connectionSocket.close()    
+            lock.release()
         
         
 
@@ -82,6 +88,7 @@ def peers_connect_to_recv():
        
 def peer_recv(i):
     while (len(arr) < 1001):
+        lock.acquire()
         sentence = "SENDLINE\n"
         peer_sockets_recv[i].send(sentence.encode())
         st=peer_sockets_recv[i].recv(line_recv_port[i]).decode()
@@ -97,6 +104,7 @@ def peer_recv(i):
             print("Received from peer")
             # # print("size of array tilll now: ", len(arr))
             arr.add(most_recent)
+        lock.acquire()
 
 def main():
     ts=time.time()
@@ -137,13 +145,13 @@ def main():
     
     
     te=time.time()
-    lst=[]
-    for items in (arr):
-        if(items[0]=="7" or items[0]=="141"):
-            print(items[1])
-          
-    lst.sort()
-    print(lst)
+    print(len(arr))
+    l=list(arr)
+    l.sort()
+    for i in range(len(l)):
+        print("................................................................................................")
+        print(l[i])
+    
     print(te-ts)
     
 main()
