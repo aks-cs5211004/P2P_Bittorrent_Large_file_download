@@ -17,7 +17,7 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 #Me receiving from peers DISTINCT PEER NAMES
-peernames=["10.184.63.175"]
+peernames=["10.184.16.183"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
 peer_s_server_ports=[9801]
 #first port is to receive from server, then others from peers
@@ -28,7 +28,7 @@ for i in range (len(peernames)):
 
 
 #Data Structures
-most_recent = (0,"")
+most_recent = ("0","Heloo")
 arr=set([])
 
 
@@ -39,7 +39,7 @@ def server_connect():
     server_socket.connect((servername, serverport))
     
 def server_recv():
-    while (len(arr) < 1000):
+    while (len(arr) < 1001):
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
         st=server_socket.recv(server_line_recv_port).decode()
@@ -52,8 +52,9 @@ def server_recv():
         
         if (index != 0):
             global most_recent
-            most_recent=(int(st[0:index]),st[index:])
-            # print("Received from server",len(arr))
+            most_recent=(st[0:index],st[index:])
+            # print("Received from server",most_recent[0])
+            # print("size of array tilll now: ", len(arr))
             arr.add(most_recent)
         
         
@@ -68,9 +69,9 @@ def peer_send():
         while True:
             sentence = connectionSocket.recv(sendline_recv_send_line_port).decode()
             if (sentence == "SENDLINE\n"): 
-                st=str(most_recent[0])+most_recent[1]
+                st=most_recent[0]+most_recent[1]
                 connectionSocket.send(st.encode())
-            # connectionSocket.close()    
+                # connectionSocket.close()    
         
         
 
@@ -81,7 +82,7 @@ def peers_connect_to_recv():
        print("connection succesful")
        
 def peer_recv(i):
-    while (len(arr) < 1000):
+    while (len(arr) < 1001):
         sentence = "SENDLINE\n"
         peer_sockets_recv[i].send(sentence.encode())
         st=peer_sockets_recv[i].recv(line_recv_port[i]).decode()
@@ -91,9 +92,12 @@ def peer_recv(i):
                 index=j
                 break
 
-        most_recent=(int(st[0:index]),st[index:])
-        print("Received from peer", len(arr))
-        arr.add(most_recent)
+        if (index != 0):
+            global most_recent
+            most_recent=(st[0:index],st[index:])
+            # print("Received from server",most_recent[0])
+            # print("size of array tilll now: ", len(arr))
+            arr.add(most_recent)
         
 
 def main():
@@ -104,7 +108,6 @@ def main():
     make_me_server()
     time.sleep(5)
     peers_connect_to_recv()
-    print("HERE")
     
     #Make threads
     server_thread= threading.Thread(target=server_recv)
@@ -136,7 +139,11 @@ def main():
     
     
     te=time.time()
-    print(len(arr))
+    lst=[]
+    for items in (arr):
+          lst.append(items[0])
+    lst.sort()
+    print(lst)
     print(te-ts)
     
 main()
