@@ -94,10 +94,10 @@ def main():
     make_me_server()
     time.sleep(5)
     peers_connect_to_recv()
+    peer_send()
     
     #Make threads
     server_thread= threading.Thread(target=server_recv)
-    me_as_server_thread=threading.Thread(target=peer_send)
     peer_rec_thread = []
     for i in range (len(peernames)):
         peer_rec_thread.append(threading.Thread(target=peer_recv,args=(i,)))   
@@ -105,13 +105,11 @@ def main():
 
     #Start all threads    
     server_thread.start()
-    me_as_server_thread.start()
     for i in range (len(peernames)):
         peer_rec_thread[i].start()
 
     #Join all threads
     server_thread.join()
-    me_as_server_thread.join()
     for i in range (len(peernames)):
         peer_rec_thread[i].join()
 
