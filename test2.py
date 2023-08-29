@@ -17,7 +17,7 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 #Me receiving from peers DISTINCT PEER NAMES
-peernames=["10.184.16.183"]
+peernames=["10.184.63.175"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
 peer_s_server_ports=[9801]
 #first port is to receive from server, then others from peers
@@ -43,8 +43,9 @@ def server_recv():
         server_socket.send(sentence.encode())
         st=server_socket.recv(server_line_recv_port).decode()
         index=0
+    
         for j in range(len(st)):
-            if(st[j]=="\n"):
+            if(not st[j].isdigit()):
                 index=j
                 break
         global most_recent
@@ -82,12 +83,12 @@ def peer_recv(i):
         st=peer_sockets_recv[i].recv(line_recv_port[i]).decode()
         index=0
         for j in range(len(st)):
-            if(st[j]=="\n"):
+            if(not st[j].isdigit()):
                 index=j
                 break
 
         most_recent=(int(st[0:index]),st[index:])
-        print("Received from server= ", most_recent[0])
+        print("Received from peer= ", most_recent[0])
         arr.add(most_recent)
         
 
