@@ -28,7 +28,7 @@ for i in range (len(peernames)):
 
 
 #Data Structures
-most_recent = ("0","")
+most_recent = (0,"")
 arr=set([])
 
 
@@ -37,6 +37,7 @@ arr=set([])
 #SERVER FUNCTIONS
 def server_connect():
     server_socket.connect((servername, serverport))
+    
 def server_recv():
     while (len(arr) < 1000):
         sentence = "SENDLINE\n"
@@ -49,10 +50,10 @@ def server_recv():
                 index=j
                 break
         
-        if (st[0] != "-"):
+        if (index != 0):
             global most_recent
             most_recent=(int(st[0:index]),st[index:])
-            print("Received from server= ", most_recent[0])
+            # print("Received from server",len(arr))
             arr.add(most_recent)
         
         
@@ -62,13 +63,14 @@ def make_me_server():
         me_as_server_socket.listen(10000)
         
 def peer_send():
-    while (True):    
+    while (True):
         connectionSocket,addr=me_as_server_socket.accept()
-        sentence = connectionSocket.recv(sendline_recv_send_line_port).decode()
-        if (sentence == "SENDLINE\n"): 
-            st=str(most_recent[0])+most_recent[1]
-            connectionSocket.send(st.encode())
-        connectionSocket.close()
+        while True:
+            sentence = connectionSocket.recv(sendline_recv_send_line_port).decode()
+            if (sentence == "SENDLINE\n"): 
+                st=str(most_recent[0])+most_recent[1]
+                connectionSocket.send(st.encode())
+            # connectionSocket.close()    
         
         
 
@@ -76,7 +78,7 @@ def peer_send():
 def peers_connect_to_recv():
    for i in range (len(peernames)):
        peer_sockets_recv[i].connect((peernames[i], peer_s_server_ports[i]))
-       print("connection succesful")   
+       print("connection succesful")
        
 def peer_recv(i):
     while (len(arr) < 1000):
@@ -90,7 +92,7 @@ def peer_recv(i):
                 break
 
         most_recent=(int(st[0:index]),st[index:])
-        print("Received from peer= ", most_recent[0])
+        print("Received from peer", len(arr))
         arr.add(most_recent)
         
 
@@ -113,7 +115,7 @@ def main():
 
     send_thread = threading.Thread(target=peer_send)
     
-    #Start all threads    
+    # Start all threads    
     server_thread.start()
     send_thread.start()
     for i in range (len(peernames)):
