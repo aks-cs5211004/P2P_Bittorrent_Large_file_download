@@ -12,14 +12,14 @@ lock = threading.Lock()
 
 #Me acting as server
 #   SWAP HERE
-me_as_server_port=5000
+me_as_server_port=3000
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 #Me receiving from peers DISTINCT PEER NAMES
-peernames=["192.168.56.152"]
+peernames=["10.184.63.175"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[5000]
+peer_s_server_ports=[3000]
 #first port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -29,6 +29,8 @@ for i in range (len(peernames)):
 #Data Structures
 most_recent = ("Heloo")
 arr=set([])
+server = set([])
+peer = set([])
 
 
 #Functions
@@ -38,27 +40,29 @@ def server_connect():
     server_socket.connect((servername, serverport))
     
 def server_recv():
-    while (len(arr) < 1001):
+    while (len(arr) < 1000):
         lock.acquire()
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
-        st=server_socket.recv(3000).decode()
-    
-        index=0
-        for j in range(len(st)):
-            if(not st[j].isdigit()):
-                index=j
-                break
-        
-        if (index!=0):
+        st=server_socket.recv(4096).decode()
 
-            global most_recent
-            most_recent=st
-            # most_recent=(st[0:index],st[index:])
-            print("Received from server",most_recent[0])
-            print("size of array tilll now: ", len(arr))
-            arr.add(most_recent)
+        i=0
+        tmp = st.split("\n")
+        if (tmp[-1] != ""):
+            print(tmp,"\n")
+        while (i < len(tmp)):
+            if (tmp[i].isnumeric()):
+                s = tmp[i]+"\n"+tmp[i+1]
+                if (tmp[i+1]!=tmp[-1]):
+                    arr.add(s + "\n...................................................................................\n")
+            i+=2
+
+        print("size of array tilll now: ", len(arr))
+        # arr.add(most_recent+ "\n...................................................................................\n")
+        # server.add(most_recent+ "\n...................................................................................\n")
         lock.release()
+    print("SERVER: 1000 lines recieved")
+    server_socket.close()
         
         
 #ME AS SERVER FUNCTIONS
@@ -70,19 +74,23 @@ def make_me_server():
 def handle_clients(conn,addr):
     print("New Connection Established from: ",addr)
     while(True):
-        msg=conn.recv(3000).decode()
+        msg=conn.recv(4096).decode()
         if msg=="DISCONNECT\n":
             break
-        conn.send(most_recent.encode())
+        else:
+            conn.send(most_recent.encode())
         
     conn.close()
+    print("connection closed")
               
 def peer_send():
-    while (True):
+    for i in range (len(peernames)):
         connectionSocket,addr=me_as_server_socket.accept()
         thread_for_clients=threading.Thread(target=handle_clients,args=(connectionSocket,addr))
         thread_for_clients.start()
         thread_for_clients.join()
+    me_as_server_socket.close()
+    print("me server closed")
 
 
 #RECEIVING FROM MY PEERS FUNCTIONS
@@ -93,10 +101,11 @@ def peers_connect_to_recv():
        print("connection succesful")
        
 def peer_recv(i):
-    while (len(arr) < 1002):
+    while (len(arr) < 1000):
+        lock.acquire()
         sentence = "SENDLINE\n"
         peer_sockets_recv[i].send(sentence.encode())
-        st=peer_sockets_recv[i].recv(3000).decode()
+        st=peer_sockets_recv[i].recv(4096).decode()
 
         index=0
         for j in range(len(st)):
@@ -110,10 +119,15 @@ def peer_recv(i):
             # most_recent=(st[0:index],st[index:])
             print("Received from peer",most_recent[0])
             print("size of array tilll now: ", len(arr))
-            arr.add(most_recent)
+            arr.add(most_recent + "\n...................................................................................\n")
+            peer.add(most_recent+ "\n...................................................................................\n")
+        lock.release()
     else:
-        sentence="DISCONNECT/n"
+        sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
+        
+    print("PEER: 1000 lines recieved")
+    peer_sockets_recv[i].close()
         
         
 
@@ -152,17 +166,30 @@ def main():
         peer_sockets_recv[i].close()
     me_as_server_socket.close()
     
-    
+    f = open("test.txt", 'w')
     te=time.time()
     arrs=sorted(arr)
     # arrs.remove({"Heloo"})
-    print(len(arrs))
-    max_size=0
     for i in arrs:
-        print("....................................................................................")
+        f.write(i)
         print(i)
+        
+    f.write("...........................SERVER.......................................")
+    for i in server:
+        f.write(i)
+        print(i)
+    
+    f.write("..............................PEER.......................................")
+    for i in peer:
+        f.write(i)
+        print(i)    
+        
+        
     print()
-    print(max_size)
+    print(len(arrs))
+    print(len(server))
+    print(len(peer))
     print(te-ts)
+    f.close()
     
 main()
