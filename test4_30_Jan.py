@@ -17,7 +17,7 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 #Me receiving from peers DISTINCT PEER NAMES
-peernames=[""]
+peernames=["10.194.21.17"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
 peer_s_server_ports=[9801]
 #first port is to receive from server, then others from peers
@@ -153,13 +153,15 @@ def main():
     
     
     te=time.time()
-    print(len(arr))
-    l=list(arr)
-    l.sort()
-    for i in range(len(l)):
-        print("................................................................................................")
-        print(l[i])
-    
+    arrs=sorted(arr)
+    # arrs.remove({"Heloo"})
+    print(len(arrs))
+    max_size=0;
+    for i in arrs:
+        print("....................................................................................")
+        print(i)
+    print()
+    print(max_size)
     print(te-ts)
     
 main()
