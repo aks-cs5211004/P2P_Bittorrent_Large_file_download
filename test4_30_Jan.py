@@ -51,10 +51,10 @@ def server_recv():
             if (tmp[i].isnumeric()):
                 s = tmp[i]+"\n"+tmp[i+1]
                 if (tmp[i+1]!=tmp[-1]):
-                    arr.add(s + "\n...................................................................................\n")
+                    arr.add(s)
             i+=2
 
-        print("size of array tilll now: ", len(arr))
+        print("SERVER: ", len(arr))
     print("SERVER: 1000 lines recieved")
     server_socket.close()
         
@@ -104,7 +104,7 @@ def peer_recv(i):
         st=peer_sockets_recv[i].recv(4096).decode()
         
         print("PEER: ", len(arr))
-        arr.add(st + "\n...................................................................................\n")
+        arr.add(st)
     else:
         sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
@@ -155,16 +155,6 @@ def main():
     for i in arrs:
         f.write(i)
         print(i)
-        
-    f.write("...........................SERVER.......................................")
-    for i in server:
-        f.write(i)
-        print(i)
-    
-    f.write("..............................PEER.......................................")
-    for i in peer:
-        f.write(i)
-        print(i)    
         
         
     print()
