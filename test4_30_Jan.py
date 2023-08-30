@@ -12,14 +12,14 @@ lock=threading.Lock()
 
 #Me acting as server
 #   SWAP HERE
-me_as_server_port=9801
+me_as_server_port=5000
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 #Me receiving from peers DISTINCT PEER NAMES
-peernames=["10.194.21.17"]
+peernames=["10.194."]
 #Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[9801]
+peer_s_server_ports=[5000]
 #first port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -39,11 +39,12 @@ def server_connect():
     
 def server_recv():
     while (len(arr) < 1001):
+        lock.acquire()
 
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
         st=server_socket.recv(3000).decode()
-    
+        index=0
         for j in range(len(st)):
             if(not st[j].isdigit()):
                 index=j
@@ -57,12 +58,15 @@ def server_recv():
             # # print("Received from server",most_recent[0])
             # # print("size of array tilll now: ", len(arr))
             arr.add(most_recent)
+        lock.release()
         
         
 #ME AS SERVER FUNCTIONS
 def make_me_server():
         me_as_server_socket.bind(('', me_as_server_port))
         me_as_server_socket.listen(10000)
+        print("SERVER DEPLOYED")
+  
         
 def handle_clients(conn,addr):
     print("New Connection Established from: ",addr)
@@ -79,8 +83,18 @@ def peer_send():
         connectionSocket,addr=me_as_server_socket.accept()
         thread_for_clients=threading.Thread(target=handle_clients,args=(connectionSocket,addr))
         thread_for_clients.start()
-        # thread_for_clients.join()
+        thread_for_clients.join()
 
+# def peer_send():
+#     while (True):
+#         connectionSocket,addr=me_as_server_socket.accept()
+#         while True:
+#             lock.acquire()
+#             sentence = connectionSocket.recv(3000).decode()
+#             if (sentence == "SENDLINE\n"): 
+#                 connectionSocket.send(most_recent.encode())
+#                 # connectionSocket.close()    
+        
         
         
 
@@ -96,7 +110,7 @@ def peer_recv(i):
         peer_sockets_recv[i].send(sentence.encode())
         st=peer_sockets_recv[i].recv(3000).decode()
 
-        
+        index=0
         for j in range(len(st)):
             if(not st[j].isdigit()):
                 index=j
@@ -107,7 +121,7 @@ def peer_recv(i):
             global most_recent
             most_recent=st
             # most_recent=(st[0:index],st[index:])
-            # # print("Received from server",most_recent[0])
+            print("Received from peer")
             # # print("size of array tilll now: ", len(arr))
             arr.add(most_recent)
     else:
@@ -122,6 +136,7 @@ def main():
     #Make Initial connections
     server_connect()
     make_me_server()
+    print("SERVER DEPLOYED")
     time.sleep(5)
     peers_connect_to_recv()
     
