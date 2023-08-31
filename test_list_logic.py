@@ -171,14 +171,13 @@ def main():
     
     f = open("test.txt", 'w')
     te=time.time()
-    arr=sorted(lst)
-    for i in arr:
+    for i in lst:
         f.write(i)
         print(i)
         
         
     print()
-    print(len(arr))
+    print(len(lst))
     print(te-ts)
     f.close()
     
