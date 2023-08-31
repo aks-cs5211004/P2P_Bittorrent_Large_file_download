@@ -17,8 +17,8 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 #Me receiving from peers DISTINCT PEER NAMES
-# "10.194.5.123", 
-peernames=["10.194.44.115"]
+# "10.194.44.115", 
+peernames=["10.194.5.123"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
 peer_s_server_ports=[8000]
 #first port is to receive from server, then others from peers
@@ -86,7 +86,8 @@ def handle_clients(conn,addr):
         else:
             lock.acquire()
             global most_recent
-            conn.send(most_recent.encode())
+            if (most_recent != "Hello"):
+                conn.send(most_recent.encode())
             # print("Sent line to peer")
             lock.release()
         
@@ -136,37 +137,37 @@ def main():
 
     #Make Initial connections
     server_connect()
-    # make_me_server()
-    # time.sleep(5)
-    # peers_connect_to_recv()
+    make_me_server()
+    time.sleep(5)
+    peers_connect_to_recv()
     
     ts=time.time()
     
     #Make threads
     server_thread= threading.Thread(target=server_recv)
-    # peer_rec_thread = []
-    # for i in range (len(peernames)):
-    #     peer_rec_thread.append(threading.Thread(target=peer_recv,args=(i,)))   
-    # send_thread = threading.Thread(target=peer_send)
+    peer_rec_thread = []
+    for i in range (len(peernames)):
+        peer_rec_thread.append(threading.Thread(target=peer_recv,args=(i,)))   
+    send_thread = threading.Thread(target=peer_send)
     
     # Start all threads    
     server_thread.start()
-    # send_thread.start()
-    # for i in range (len(peernames)):
-    #     peer_rec_thread[i].start()
+    send_thread.start()
+    for i in range (len(peernames)):
+        peer_rec_thread[i].start()
 
     # #Join all threads
     server_thread.join()
-    # send_thread.join()
-    # for i in range (len(peernames)):
-    #     peer_rec_thread[i].join()
+    send_thread.join()
+    for i in range (len(peernames)):
+        peer_rec_thread[i].join()
 
         
     #Close all connections
     server_socket.close()
-    # for i in range (len(peernames)):
-    #     peer_sockets_recv[i].close()
-    # me_as_server_socket.close()
+    for i in range (len(peernames)):
+        peer_sockets_recv[i].close()
+    me_as_server_socket.close()
     
     f = open("test.txt", 'w')
     te=time.time()
