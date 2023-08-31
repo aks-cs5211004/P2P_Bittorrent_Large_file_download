@@ -12,14 +12,15 @@ lock = threading.Lock()
 
 #Me acting as server
 #   SWAP HERE
-me_as_server_port=3000
+me_as_server_port=5000
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 #Me receiving from peers DISTINCT PEER NAMES
-peernames=["10.184.63.175"]
+# "10.194.44.115", 
+peernames=["10.194.5.123"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[3000]
+peer_s_server_ports=[5000]
 #first port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -29,8 +30,6 @@ for i in range (len(peernames)):
 #Data Structures
 most_recent = ("Heloo")
 arr=set([])
-server = set([])
-peer = set([])
 
 
 #Functions
@@ -49,7 +48,7 @@ def server_recv():
         tmp = st.split("\n")
         while (i < len(tmp)):
             if (tmp[i].isnumeric()):
-                s = tmp[i]+"\n"+tmp[i+1]
+                s = tmp[i]+"\n"+tmp[i+1]+"\n"
                 if (tmp[i+1]!=tmp[-1]):
                     arr.add(s)
             i+=2
@@ -73,8 +72,9 @@ def handle_clients(conn,addr):
             break
         else:
             lock.acquire()
-            lst = list(arr)
-            conn.send(lst[-1].encode())
+            if (len(arr) > 0):
+                lst = list(arr)
+                conn.send(lst[-1].encode())
             lock.release()
         
     conn.close()
@@ -103,7 +103,7 @@ def peer_recv(i):
         peer_sockets_recv[i].send(sentence.encode())
         st=peer_sockets_recv[i].recv(4096).decode()
         
-        print("PEER: ", len(arr))
+        print("PEER: ",i , len(arr))
         arr.add(st)
     else:
         sentence="DISCONNECT\n"
@@ -115,13 +115,14 @@ def peer_recv(i):
         
 
 def main():
-    ts=time.time()
 
     #Make Initial connections
     server_connect()
     make_me_server()
     time.sleep(5)
     peers_connect_to_recv()
+    
+    ts=time.time()
     
     #Make threads
     server_thread= threading.Thread(target=server_recv)
@@ -159,8 +160,6 @@ def main():
         
     print()
     print(len(arrs))
-    print(len(server))
-    print(len(peer))
     print(te-ts)
     f.close()
     
