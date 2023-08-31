@@ -12,7 +12,7 @@ lock = threading.Lock()
 
 #Me acting as server
 #   SWAP HERE
-me_as_server_port=8000
+me_as_server_port=  7000
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
@@ -20,7 +20,7 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 # "10.194.5.123", 
 peernames=["10.194.44.115"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[7000]
+peer_s_server_ports=[8000]
 #first port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
