@@ -12,7 +12,7 @@ lock = threading.Lock()
 
 #Me acting as server
 #   SWAP HERE
-me_as_server_port= 7000
+me_as_server_port= 7100
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
@@ -20,7 +20,7 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 # "10.194.44.115", 
 peernames=["10.194.5.123"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[8000]
+peer_s_server_ports=[8100]
 #first port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -61,7 +61,7 @@ def server_recv():
                     lock.release()
             i+=2
 
-        print("SERVER: ", lines)
+        # print("SERVER: ", lines)
     print("SERVER: 1000 lines recieved")
     server_socket.close()
         
@@ -76,7 +76,7 @@ def handle_clients(conn,addr):
     print("New Connection Established from: ",addr)
     while(True):
         msg=conn.recv(4096).decode()
-        # print(msg)
+        print(msg)
         if msg=="DISCONNECT\n":
             break
         elif (msg.isnumeric()):
@@ -115,15 +115,21 @@ def peer_recv(i):
     global lines
     while (lines < 1000):
         sentence = ""
-        if (lines > 900):
+        if (lines > 900 and lines<1000):
             index = lst.index("")
             sentence = str(index)
         else:
             sentence = "SENDLINE\n"
             
         peer_sockets_recv[i].send(sentence.encode())
+        lock.acquire()
         st=peer_sockets_recv[i].recv(4096).decode()
-        print("PEER: ",i , lines)
+        if (st != ""):
+            tmp = st.split("\n")
+            idx = int(tmp[0])
+            lines[idx] = st
+        lock.release()
+        # print("PEER: ",i , lines)
     else:
         sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
