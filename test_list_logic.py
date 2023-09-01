@@ -12,15 +12,15 @@ lock = threading.Lock()
 
 #Me acting as server
 #   SWAP HERE
-me_as_server_port= 7100
+me_as_server_port= 7101
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 #Me receiving from peers DISTINCT PEER NAMES
 # "10.194.44.115", 
-peernames=["10.194.5.123"]
+peernames=["10.184.60.82"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[8100]
+peer_s_server_ports=[8101]
 #first port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -46,6 +46,7 @@ def server_recv():
         server_socket.send(sentence.encode())
         st=server_socket.recv(4096).decode()
 
+        lock.acquire()
         i=0
         tmp = st.split("\n")
         while (i < len(tmp)):
@@ -54,16 +55,16 @@ def server_recv():
                 if (tmp[i+1]!=tmp[-1]):
                     global most_recent
                     most_recent = s
-                    lock.acquire()
                     if (lst[int(tmp[i])] == ""):
                         lines+=1
                     lst[int(tmp[i])] = s
-                    lock.release()
             i+=2
+        lock.release()
 
-        # print("SERVER: ", lines)
+        print("SERVER: ", lines)
     print("SERVER: 1000 lines recieved")
     server_socket.close()
+    print("server socket closed")
         
         
 #ME AS SERVER FUNCTIONS
@@ -75,21 +76,23 @@ def make_me_server():
 def handle_clients(conn,addr):
     print("New Connection Established from: ",addr)
     while(True):
+        lock.acquire()
         msg=conn.recv(4096).decode()
         print(msg)
         if msg=="DISCONNECT\n":
             break
-        elif (msg.isnumeric()):
-            lock.acquire()
-            conn.send(lst[int(msg)].encode())
-            lock.release()
+        # elif (msg.isnumeric()):
+        #     lock.acquire()
+        #     conn.send(lst[int(msg)].encode())
+        #     lock.release()
         else:
-            lock.acquire()
+            # lock.acquire()
             global most_recent
             if (most_recent != "Hello"):
                 conn.send(most_recent.encode())
-            # print("Sent line to peer")
-            lock.release()
+                print("Sent line to peer")
+            # lock.release()
+        lock.release()
         
     conn.close()
     print("connection closed")
@@ -129,7 +132,7 @@ def peer_recv(i):
             idx = int(tmp[0])
             lines[idx] = st
         lock.release()
-        # print("PEER: ",i , lines)
+        print("PEER: ",i , lines)
     else:
         sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
