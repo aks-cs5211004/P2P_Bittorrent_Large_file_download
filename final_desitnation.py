@@ -4,27 +4,27 @@ from socket import *
 import select
 import random
 
-#vayu server
-servername='10.17.51.115'
+# Vayu server
+servername='10.17.7.134'
 serverport=9801
 server_socket = socket(AF_INET, SOCK_STREAM)
 
-#locks
+# Locks
 lock1 = threading.Lock()
 lock2 = threading.Lock()
 lock3 = threading.Lock()
-#Me acting as server
-#   SWAP HERE
-me_as_server_port=8005
+# Me acting as server
+# SWAP HERE
+me_as_server_port=9010
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
-#Me receiving from peers DISTINCT PEER NAMES
-# "10.194.5.123", 
-peernames=["10.184.60.82"]
-#Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[8005]
-#first port is to receive from server, then others from peers
+# Me receiving from peers DISTINCT PEER NAMES
+
+peernames=["192.168.128.152", "192.168.128.75"]
+# Here write the me_as_server_ports of your peers (ALL 9801)
+peer_s_server_ports=[9010,9010]
+# First port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
     peer_sockets_recv.append(socket(AF_INET, SOCK_STREAM))
@@ -55,13 +55,13 @@ def server_recv():
         if (len(tmp) > 2):
             if (tmp[0].isnumeric() and lst[int(tmp[0])]==""):
                 s = tmp[0]+"\n"+tmp[1]+"\n"
-                unique.remove(tmp[0])
+                unique.remove(int(tmp[0]))
                 lst[int(tmp[0])] = s
                 lines+=1
                 global most_recent
                 most_recent = s
 
-        # print("SERVER: ", lines)
+        print("SERVER: ", lines)
         lock1.release()
 
     server_socket.close()
@@ -83,10 +83,10 @@ def handle_peers(conn,addr):
         if (msg=="DISCONNECT\n"):
             break
         elif (msg.isnumeric() and int(msg)<1000):
-            print("Peer asked me this line................................." + msg )  
+            # print("Peer asked me this line................................." + msg )  
             sent=lst[int(msg)]
             conn.send(sent.encode())
-            print("I responded to peer this line................................." + msg )  
+            # print("I responded to peer this line................................." + msg )  
         else:
             conn.send(most_recent.encode())
         lock2.release()
@@ -96,7 +96,7 @@ def handle_peers(conn,addr):
               
 def peer_send():
     thread_for_clients = []
-    # should we make more than pne me_as_server_sokcets ?
+    # should we make more than one me_as_server_sokcets ?
     for i in range (len(peernames)):
         connectionSocket,addr=me_as_server_socket.accept()
         thread_for_clients.append(threading.Thread(target=handle_peers,args=(connectionSocket,addr)))
@@ -118,25 +118,24 @@ def connect_peers():
 
 def peer_recv(i):
     global lines,lst,unique
-    peer_sockets_recv[i].settimeout(1)
     while (lines < 1000):
         lock3.acquire()
         sentence = "SENDLINE\n"
-        if(lines>900 and lines<1000):
-            sentence=random.choice(unique)
+        if(lines>900):
+            sentence=str(random.choice(unique))
 
-        print("Request........................... sent to peer........."+ sentence)
+        # print("Request........................... sent to peer........."+ sentence)
         peer_sockets_recv[i].send(sentence.encode())
         
         st = ""
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 1.0)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.5)
         if ready[0]:
             string = peer_sockets_recv[i].recv(4096)
             st = string.decode()
         
 
-        print("Received from...........................  peer........."+ sentence)
+        # print("Received from...........................  peer........."+ sentence)
         if (st != "Hello" and st!=""):
             tmp = st.split("\n")
             if (len(tmp) > 2 and tmp[0].isnumeric() and lst[int(tmp[0])]==""):
@@ -144,7 +143,8 @@ def peer_recv(i):
                 lst[int(tmp[0])] = s
                 unique.remove(int(tmp[0]))
                 lines+=1
-            print("PEER:",lines)
+        
+        print("PEER:",lines)
         lock3.release()
         
 
