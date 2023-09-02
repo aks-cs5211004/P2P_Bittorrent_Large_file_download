@@ -87,7 +87,7 @@ def handle_clients(conn,addr):
     while(True):
         msg=conn.recv(4096).decode()
         print(msg)
-        lock.acquire()
+        # lock.acquire()
         if msg=="DISCONNECT\n":
             break
         # elif (msg.isnumeric()):
@@ -100,7 +100,7 @@ def handle_clients(conn,addr):
                 conn.send(most_recent.encode())
                 print("Sent line to peer")
             # lock.release()
-        lock.release()
+        # lock.release()
         
     conn.close()
     print("connection closed")
@@ -146,7 +146,7 @@ def peer_recv(i):
             idx = int(tmp[0])
             lst[idx] = st
             lines+=1
-        print("PEER: ",i , lines)
+        # print("PEER: ",i , lines)
         lock.release()
     else:
         sentence="DISCONNECT\n"
