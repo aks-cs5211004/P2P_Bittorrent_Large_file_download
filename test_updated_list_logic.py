@@ -93,7 +93,7 @@ def handle_peers(conn,addr):
         msg=conn.recv(4096).decode()
         if (msg=="DISCONNECT\n"):
             break
-        elif (msg.isnumeric()):
+        elif (msg.isnumeric() and int(msg)<1000):
             print("Peer asked me this line................................." + msg )  
             sent=lst[int(msg)]
             conn.send(sent.encode())
@@ -138,12 +138,21 @@ def peer_recv(i):
         print("Request........................... sent to peer........."+ sentence)
         peer_sockets_recv[i].send(sentence.encode())
         
-        readable, _, _ = select.select([peer_sockets_recv[i]], [], [], timeout)
-        if peer_sockets_recv[i] in readable:
-            st = peer_sockets_recv[i].recv(4096).decode()
-        else:
-            continue
+        # peer_sockets_recv[i].settimeout(2)
+        # try:
+        #     string = peer_sockets_recv[i].recv(4096)
+        #     # peer_sockets_recv[i].settimeout(None) 
+        # except Exception:
+        #     # peer_sockets_recv[i].settimeout(None) 
+        #     continue
+        st = ""
+        peer_sockets_recv[i].setblocking(0)
+        ready = select.select([peer_sockets_recv[i]], [], [], 1.0)
+        if ready[0]:
+            string = peer_sockets_recv[i].recv(4096)
+            st = string.decode()
         
+
         print("Received from...........................  peer........."+ sentence)
         if (st != "Hello" and st!=""):
             tmp = st.split("\n")
