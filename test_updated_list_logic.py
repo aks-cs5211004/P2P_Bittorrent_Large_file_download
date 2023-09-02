@@ -1,9 +1,10 @@
 import threading
 import time
 from socket import *
+import select
 
 #vayu server
-servername='10.17.7.134'
+servername='10.17.51.115'
 serverport=9801
 server_socket = socket(AF_INET, SOCK_STREAM)
 
@@ -19,7 +20,7 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 #Me receiving from peers DISTINCT PEER NAMES
 # "10.194.5.123", 
-peernames=["10.184.10.71"]
+peernames=["10.184.60.82"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
 peer_s_server_ports=[8005]
 #first port is to receive from server, then others from peers
@@ -128,6 +129,7 @@ def connect_peers():
 
 def peer_recv(i):
     global lines,lst
+    peer_sockets_recv[i].settimeout(1)
     while (lines < 1000):
         lock3.acquire()
         sentence = "SENDLINE\n"
@@ -135,11 +137,13 @@ def peer_recv(i):
             sentence=str(lst.index(""))
         print("Request........................... sent to peer........."+ sentence)
         peer_sockets_recv[i].send(sentence.encode())
-        peer_sockets_recv[i].settimeout(1)
-        try:
-            st=peer_sockets_recv[i].recv(4096).decode()
-        except socket.timeout as e:
+        
+        readable, _, _ = select.select([peer_sockets_recv[i]], [], [], timeout)
+        if peer_sockets_recv[i] in readable:
+            st = peer_sockets_recv[i].recv(4096).decode()
+        else:
             continue
+        
         print("Received from...........................  peer........."+ sentence)
         if (st != "Hello" and st!=""):
             tmp = st.split("\n")
