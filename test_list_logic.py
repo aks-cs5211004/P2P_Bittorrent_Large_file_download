@@ -12,15 +12,15 @@ lock = threading.Lock()
 
 #Me acting as server
 #   SWAP HERE
-me_as_server_port= 7200
+me_as_server_port= 7201
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
     
 
 #Me receiving from peers DISTINCT PEER NAMES
 # "10.194.44.115", 
-peernames=["192.168.87.75"]
+peernames=["10.194.14.92"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[8200]
+peer_s_server_ports=[8201]
 #first port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -37,7 +37,13 @@ lines = 0
 
 #SERVER FUNCTIONS
 def server_connect():
-    server_socket.connect((servername, serverport))
+    for i in range(4):
+        try:
+            server_socket.connect((servername, serverport))
+            break
+        except socket.error as e:
+            time.sleep(0.1)
+        
     
 def server_recv():
     global lines
@@ -110,8 +116,14 @@ def peer_send():
 def peers_connect_to_recv():
     print("Trying to connect ...")
     for i in range (len(peernames)):
-       peer_sockets_recv[i].connect((peernames[i], peer_s_server_ports[i]))
-       print("connection succesful")
+        for i in range(4):
+            try:
+                peer_sockets_recv[i].connect((peernames[i], peer_s_server_ports[i]))
+                print("connection succesful")
+                break
+            except socket.error as e:
+                time.sleep(0.1)
+            
        
 def peer_recv(i):
     global lines
@@ -148,7 +160,6 @@ def main():
     make_me_server()
     time.sleep(5)
     peers_connect_to_recv()
-    time.sleep(2)
     
     ts=time.time()
     
