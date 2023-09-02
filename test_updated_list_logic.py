@@ -135,10 +135,10 @@ def peer_recv(i):
             sentence=str(lst.index(""))
         print("Request........................... sent to peer........."+ sentence)
         peer_sockets_recv[i].send(sentence.encode())
+        peer_sockets_recv[i].settimeout(1)
         try:
-            peer_sockets_recv[i].settimeout(1)
             st=peer_sockets_recv[i].recv(4096).decode()
-        except Exception as e:
+        except socket.timeout as e:
             continue
         print("Received from...........................  peer........."+ sentence)
         if (st != "Hello" and st!=""):
