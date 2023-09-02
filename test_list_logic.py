@@ -66,8 +66,8 @@ def server_recv():
                     lst[int(tmp[i])] = s
             i+=2
 
+        # print("SERVER: ", lines)
         lock.release()
-        print("SERVER: ", lines)
         
     print("SERVER: 1000 lines recieved")
     sentence = "SESSION RESET\n"
@@ -87,7 +87,7 @@ def handle_clients(conn,addr):
     while(True):
         msg=conn.recv(4096).decode()
         print(msg)
-        # lock.acquire()
+        lock.acquire()
         if msg=="DISCONNECT\n":
             break
         # elif (msg.isnumeric()):
@@ -100,7 +100,7 @@ def handle_clients(conn,addr):
                 conn.send(most_recent.encode())
                 print("Sent line to peer")
             # lock.release()
-        # lock.release()
+        lock.release()
         
     conn.close()
     print("connection closed")
@@ -146,8 +146,8 @@ def peer_recv(i):
             idx = int(tmp[0])
             lst[idx] = st
             lines+=1
-        lock.release()
         print("PEER: ",i , lines)
+        lock.release()
     else:
         sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
