@@ -13,7 +13,7 @@ lock2 = threading.Lock()
 lock3 = threading.Lock()
 #Me acting as server
 #   SWAP HERE
-me_as_server_port=7000
+me_as_server_port=8005
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
@@ -21,7 +21,7 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 # "10.194.5.123", 
 peernames=["10.184.10.71"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[8000]
+peer_s_server_ports=[8005]
 #first port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -41,7 +41,8 @@ def server_connect():
     server_socket.connect((servername, serverport))
     
 def server_recv():
-    global lines
+
+    global lines,lst
     while (lines < 1000):
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
@@ -70,10 +71,10 @@ def server_recv():
         #         break
         #     i+=2
 
-        print("SERVER: ", lines)
+        # print("SERVER: ", lines)
         lock1.release()
 
-    # server_socket.close()
+    server_socket.close()
     print("Server Sokcet Closed")
 
         
@@ -84,10 +85,12 @@ def deploy_server():
     print("Server Deployed")
         
 def handle_peers(conn,addr):
+    global most_recent,lst
     print("New connection established from: ",addr)
     while(True):
-        msg=conn.recv(4096).decode()
         lock2.acquire()
+        msg=conn.recv(4096).decode()
+        
         if (msg=="DISCONNECT\n"):
             break
         elif (msg.isnumeric()):
@@ -122,20 +125,29 @@ def connect_peers():
        print("connection succesful from: ", peernames[i])
 
 def peer_recv(i):
-    global lines
+    global lines,lst
     while (lines < 1000):
         lock3.acquire()
         sentence = "SENDLINE\n"
-        if(lines>900):
+        if(lines>900 and lines<1000):
             sentence=str(lst.index(""))
+        print("Request........................... sent to peer........."+ sentence)
         peer_sockets_recv[i].send(sentence.encode())
-        st=peer_sockets_recv[i].recv(4096).decode()
+        try:
+            st=peer_sockets_recv[i].recv(4096).decode()
+        except:
+            continue
+        print("I responded to peer this line................................." + st)  
         if (st != "Hello" and st!=""):
             tmp = st.split("\n")
-            if (lst[int(tmp[0])]==""):
-                lst[int(tmp[0])] = st
+            # if (tmp[0].isnumeric() and lst[int(tmp[0])]==""):
+            #     lst[int(tmp[0])] = st
+            #     lines+=1
+            if (len(tmp) > 2 and tmp[0].isnumeric() and lst[int(tmp[0])]==""):
+                s = tmp[i]+"\n"+tmp[i+1]+"\n"
+                lst[int(tmp[i])] = s
                 lines+=1
-            print("PEER: ", lines)
+            print("PEER:",lines)
         lock3.release()
         
 
