@@ -18,7 +18,7 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 #Me receiving from peers DISTINCT PEER NAMES
 # "10.194.44.115", 
-peernames=["10.194.14.92"]
+peernames=["192.168.87.75"]
 #Here write the me_as_server_ports of your peers (ALL 9801)
 peer_s_server_ports=[8200]
 #first port is to receive from server, then others from peers
@@ -42,7 +42,7 @@ def server_connect():
 def server_recv():
     global lines
     while (lines < 1000):
-        # lock.acquire()
+        lock.acquire()
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
         st=server_socket.recv(4096).decode()
@@ -59,9 +59,9 @@ def server_recv():
                         lines+=1
                     lst[int(tmp[i])] = s
             i+=2
-        # lock.release()
 
         print("SERVER: ", lines)
+        lock.release()
     print("SERVER: 1000 lines recieved")
     server_socket.close()
     print("server socket closed")
@@ -76,7 +76,7 @@ def make_me_server():
 def handle_clients(conn,addr):
     print("New Connection Established from: ",addr)
     while(True):
-        # lock.acquire()
+        lock.acquire()
         msg=conn.recv(4096).decode()
         print(msg)
         if msg=="DISCONNECT\n":
@@ -91,7 +91,7 @@ def handle_clients(conn,addr):
                 conn.send(most_recent.encode())
                 print("Sent line to peer")
             # lock.release()
-        # lock.release()
+        lock.release()
         
     conn.close()
     print("connection closed")
@@ -106,7 +106,7 @@ def peer_send():
     print("me server closed")
 
 
-#RECEIVING FROM MY PEERS FUNCTIONS
+#RECEIVING FROM MY PEERS FUNCTIONS 
 def peers_connect_to_recv():
     print("Trying to connect ...")
     for i in range (len(peernames)):
@@ -116,6 +116,7 @@ def peers_connect_to_recv():
 def peer_recv(i):
     global lines
     while (lines < 1000):
+        lock.acquire()
         sentence = ""
         if (lines > 900 and lines<1000):
             index = lst.index("")
@@ -124,14 +125,13 @@ def peer_recv(i):
             sentence = "SENDLINE\n"
             
         peer_sockets_recv[i].send(sentence.encode())
-        lock.acquire()
         st=peer_sockets_recv[i].recv(4096).decode()
         if (st != ""):
             tmp = st.split("\n")
             idx = int(tmp[0])
-            lines[idx] = st
-        lock.release()
+            lst[idx] = st
         print("PEER: ",i , lines)
+        lock.release()
     else:
         sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
@@ -145,43 +145,43 @@ def main():
 
     #Make Initial connections
     server_connect()
-    # make_me_server()
-    # time.sleep(5)
-    # peers_connect_to_recv()
+    make_me_server()
+    time.sleep(5)
+    peers_connect_to_recv()
     
     ts=time.time()
     
     #Make threads
     server_thread= threading.Thread(target=server_recv)
-    # peer_rec_thread = []
-    # for i in range (len(peernames)):
-    #     peer_rec_thread.append(threading.Thread(target=peer_recv,args=(i,)))   
-    # send_thread = threading.Thread(target=peer_send)
+    peer_rec_thread = []
+    for i in range (len(peernames)):
+        peer_rec_thread.append(threading.Thread(target=peer_recv,args=(i,)))   
+    send_thread = threading.Thread(target=peer_send)
     
     # Start all threads    
     server_thread.start()
-    # send_thread.start()
-    # for i in range (len(peernames)):
-    #     peer_rec_thread[i].start()
+    send_thread.start()
+    for i in range (len(peernames)):
+        peer_rec_thread[i].start()
 
     # #Join all threads
     server_thread.join()
-    # send_thread.join()
-    # for i in range (len(peernames)):
-    #     peer_rec_thread[i].join()
+    send_thread.join()
+    for i in range (len(peernames)):
+        peer_rec_thread[i].join()
 
         
     #Close all connections
     server_socket.close()
-    # for i in range (len(peernames)):
-    #     peer_sockets_recv[i].close()
-    # me_as_server_socket.close()
+    for i in range (len(peernames)):
+        peer_sockets_recv[i].close()
+    me_as_server_socket.close()
     
     f = open("test.txt", 'w')
     te=time.time()
     for i in lst:
         f.write(i)
-        print(i)
+        # print(i)
         
         
     print()
