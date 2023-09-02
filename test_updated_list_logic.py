@@ -90,11 +90,13 @@ def handle_peers(conn,addr):
     while(True):
         lock2.acquire()
         msg=conn.recv(4096).decode()
-        
         if (msg=="DISCONNECT\n"):
             break
         elif (msg.isnumeric()):
-            conn.send(lst[int(msg)].encode())
+            print("Peer asked me this line................................." + msg )  
+            sent=lst[int(msg)]
+            conn.send(sent.encode())
+            print("I responded to peer this line................................." + msg )  
         else:
             conn.send(most_recent.encode())
         lock2.release()
@@ -134,10 +136,11 @@ def peer_recv(i):
         print("Request........................... sent to peer........."+ sentence)
         peer_sockets_recv[i].send(sentence.encode())
         try:
+            peer_sockets_recv[i].settimeout(1)
             st=peer_sockets_recv[i].recv(4096).decode()
-        except:
+        except Exception as e:
             continue
-        print("I responded to peer this line................................." + st)  
+        print("Received from...........................  peer........."+ sentence)
         if (st != "Hello" and st!=""):
             tmp = st.split("\n")
             # if (tmp[0].isnumeric() and lst[int(tmp[0])]==""):
