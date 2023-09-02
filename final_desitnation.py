@@ -21,7 +21,7 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 # Me receiving from peers DISTINCT PEER NAMES
 
-peernames=["192.168.128.246"]
+peernames=["10.184.10.71"]
 # Here write the me_as_server_ports of your peers (ALL 9801)
 peer_s_server_ports=[9011,9011]
 # First port is to receive from server, then others from peers
@@ -66,7 +66,7 @@ def server_recv():
                 global most_recent
                 most_recent = s
 
-        print("SERVER: ", lines)
+        # print("SERVER: ", lines)
         lock1.release()
 
     server_socket.close()
@@ -126,7 +126,7 @@ def peer_recv(i):
     while (lines < 1000):
         lock3.acquire()
         sentence = "SENDLINE\n"
-        if(lines>900):
+        if(lines>800):
             sentence=str(random.choice(unique))
 
         # print("Request........................... sent to peer........."+ sentence)
@@ -160,22 +160,24 @@ def peer_recv(i):
         
 # Submiting answer to server
 def SUBMIT():
-    server_socket.send("SUBMIT\n".encode())
+    submit_socket= socket(AF_INET, SOCK_STREAM)
+    submit_socket.connect((servername, serverport))
+    submit_socket.send("SUBMIT\n".encode())
     print("Wrote submit")
-    server_socket.send(("cs1210793@blue_dictators\n").encode())
-    server_socket.send((str(len(lst))+"\n").encode())
+    submit_socket.send(("cs1210793@blue_dictators\n").encode())
+    submit_socket.send((str(len(lst))+"\n").encode())
     print("Submitted no. of lines")
     i=0
     st=""
     while(i<len(lst)):
         st+=lst[i]
         i+=1
-    server_socket.send(st.encode())
+    submit_socket.send(st.encode())
     print("SUBMITTED LINE", i)
     print("loop ends")
-    st=server_socket.recv(4096).decode()
+    st=submit_socket.recv(4096).decode()
     print(st)
-    server_socket.close()    
+    submit_socket.close()    
 
 def main():
 
@@ -219,10 +221,10 @@ def main():
         f.write(i)
         # print(i)
         
-    # SUBMIT() 
     print()
     print(len(lst))
     print(te-ts)
     f.close()
+    SUBMIT() 
     
 main()
