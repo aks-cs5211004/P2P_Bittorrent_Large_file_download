@@ -139,8 +139,7 @@ def peer_recv(i):
         
     print("PEER: 1000 lines recieved")
     peer_sockets_recv[i].close()
-        
-        
+
 
 def main():
 
