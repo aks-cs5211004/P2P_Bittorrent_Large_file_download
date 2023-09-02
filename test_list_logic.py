@@ -41,7 +41,7 @@ def server_connect():
         try:
             server_socket.connect((servername, serverport))
             break
-        except socket.error as e:
+        except Exception as e:
             time.sleep(0.1)
         
     
@@ -68,7 +68,10 @@ def server_recv():
 
         lock.release()
         print("SERVER: ", lines)
+        
     print("SERVER: 1000 lines recieved")
+    sentence = "SESSION RESET\n"
+    server_socket.send(sentence.encode())
     server_socket.close()
     print("server socket closed")
         
@@ -87,8 +90,8 @@ def handle_clients(conn,addr):
         # lock.acquire()
         if msg=="DISCONNECT\n":
             break
-        elif (msg.isnumeric()):
-            conn.send(lst[int(msg)].encode())
+        # elif (msg.isnumeric()):
+        #     conn.send(lst[int(msg)].encode())
         else:
             # lock.acquire()
             global most_recent
@@ -121,7 +124,7 @@ def peers_connect_to_recv():
                 peer_sockets_recv[i].connect((peernames[i], peer_s_server_ports[i]))
                 print("connection succesful")
                 break
-            except socket.error as e:
+            except Exception as e:
                 time.sleep(0.1)
             
        
