@@ -1,8 +1,8 @@
+import random
+import select
 import threading
 import time
 from socket import *
-import select
-import random
 
 # Vayu server
 servername='10.17.7.134'
@@ -15,15 +15,15 @@ lock2 = threading.Lock()
 lock3 = threading.Lock()
 # Me acting as server
 # SWAP HERE
-me_as_server_port=9010
+me_as_server_port=9011
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
 
-peernames=["192.168.128.152", "192.168.128.75"]
+peernames=["192.168.128.246"]
 # Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[9010,9010]
+peer_s_server_ports=[9011,9011]
 # First port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -41,7 +41,12 @@ lines = 0
 
 #SERVER FUNCTIONS
 def server_connect():
-    server_socket.connect((servername, serverport))
+    while(True):
+        try:
+            server_socket.connect((servername, serverport))
+            break
+        except Exception:
+            continue
     
 def server_recv():
     global lines,lst,unique
