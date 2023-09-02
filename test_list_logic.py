@@ -42,9 +42,9 @@ def server_connect():
 def server_recv():
     global lines
     while (lines < 1000):
-        lock.acquire()
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
+        lock.acquire()
         st=server_socket.recv(4096).decode()
 
         i=0
@@ -60,8 +60,8 @@ def server_recv():
                     lst[int(tmp[i])] = s
             i+=2
 
-        print("SERVER: ", lines)
         lock.release()
+        print("SERVER: ", lines)
     print("SERVER: 1000 lines recieved")
     server_socket.close()
     print("server socket closed")
@@ -76,13 +76,13 @@ def make_me_server():
 def handle_clients(conn,addr):
     print("New Connection Established from: ",addr)
     while(True):
-        lock.acquire()
         msg=conn.recv(4096).decode()
         print(msg)
+        # lock.acquire()
         if msg=="DISCONNECT\n":
             break
-        # elif (msg.isnumeric()):
-        #     conn.send(lst[int(msg)].encode())
+        elif (msg.isnumeric()):
+            conn.send(lst[int(msg)].encode())
         else:
             # lock.acquire()
             global most_recent
@@ -91,7 +91,7 @@ def handle_clients(conn,addr):
                 conn.send(most_recent.encode())
                 print("Sent line to peer")
             # lock.release()
-        lock.release()
+        # lock.release()
         
     conn.close()
     print("connection closed")
@@ -116,7 +116,6 @@ def peers_connect_to_recv():
 def peer_recv(i):
     global lines
     while (lines < 1000):
-        lock.acquire()
         sentence = ""
         if (lines > 900 and lines<1000):
             index = lst.index("")
@@ -124,14 +123,16 @@ def peer_recv(i):
         else:
             sentence = "SENDLINE\n"
             
+        lock.acquire()
         peer_sockets_recv[i].send(sentence.encode())
         st=peer_sockets_recv[i].recv(4096).decode()
         if (st != ""):
             tmp = st.split("\n")
             idx = int(tmp[0])
             lst[idx] = st
-        print("PEER: ",i , lines)
+            lines+=1
         lock.release()
+        print("PEER: ",i , lines)
     else:
         sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
@@ -148,6 +149,7 @@ def main():
     make_me_server()
     time.sleep(5)
     peers_connect_to_recv()
+    time.sleep(2)
     
     ts=time.time()
     
