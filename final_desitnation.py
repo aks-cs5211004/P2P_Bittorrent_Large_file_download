@@ -5,7 +5,7 @@ import time
 from socket import *
 
 # Vayu server
-servername='10.17.7.134'
+servername='10.17.51.115'
 serverport=9801
 server_socket = socket(AF_INET, SOCK_STREAM)
 
@@ -21,7 +21,7 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 # Me receiving from peers DISTINCT PEER NAMES
 
-peernames=["10.184.10.71"]
+peernames=["10.184.60.82"]
 # Here write the me_as_server_ports of your peers (ALL 9801)
 peer_s_server_ports=[9011,9011]
 # First port is to receive from server, then others from peers
@@ -66,7 +66,7 @@ def server_recv():
                 global most_recent
                 most_recent = s
 
-        # print("SERVER: ", lines)
+        print("SERVER: ", lines)
         lock1.release()
 
     server_socket.close()
