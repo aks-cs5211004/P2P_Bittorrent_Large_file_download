@@ -49,7 +49,7 @@ def server_connect():
             continue
     
 def server_recv():
-    global lines,lst,unique
+    global lines,lst,unique,most_recent
     while (lines < 1000):
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
@@ -58,14 +58,13 @@ def server_recv():
         st=server_socket.recv(4096).decode()
         tmp = st.split("\n")
         i=0
-        if(len(tmp)%2==1):
-            while (len(tmp) > 2 and i<len(tmp)):
+        if(len(tmp)%2==1 and len(tmp) > 2):
+            while (i<len(tmp)):
                 if (tmp[i].isnumeric() and lst[int(tmp[i])]==""):
                     s = tmp[i]+"\n"+tmp[i+1]+"\n"
                     unique.remove(int(tmp[i]))
                     lst[int(tmp[i])] = s
                     lines+=1
-                    global most_recent
                     most_recent = s
                 i+=2
 
@@ -146,14 +145,14 @@ def peer_recv(i):
         # print("Received from...........................  peer........."+ sentence)
         if (st != "Hello" and st!=""):
             tmp = st.split("\n")
-            if(len(tmp)%2==1):
-                    while (len(tmp) > 2 and i<len(tmp)):
-                        if (tmp[i].isnumeric() and lst[int(tmp[i])]==""):
-                            s = tmp[i]+"\n"+tmp[i+1]+"\n"
-                            unique.remove(int(tmp[i]))
-                            lst[int(tmp[i])] = s
-                            lines+=1
-                        i+=2
+            if(len(tmp)%2==1 and len(tmp) > 2):
+                while (i<len(tmp)):
+                    if (tmp[i].isnumeric() and lst[int(tmp[i])]==""):
+                        s = tmp[i]+"\n"+tmp[i+1]+"\n"
+                        unique.remove(int(tmp[i]))
+                        lst[int(tmp[i])] = s
+                        lines+=1
+                    i+=2
         
         print("PEER:",lines)
         lock3.release()
@@ -189,36 +188,36 @@ def main():
 
     #Make Initial connections
     server_connect()
-    # deploy_server()
-    # time.sleep(5)
-    # connect_peers()
+    deploy_server()
+    time.sleep(5)
+    connect_peers()
     
     ts=time.time()
     
     #Make threads
     server_thread= threading.Thread(target=server_recv)
-    # peer_recv_thread = []
-    # for i in range (len(peernames)):
-    #     peer_recv_thread.append(threading.Thread(target=peer_recv,args=(i,)))   
-    # peer_send_thread = threading.Thread(target=peer_send)
+    peer_recv_thread = []
+    for i in range (len(peernames)):
+        peer_recv_thread.append(threading.Thread(target=peer_recv,args=(i,)))   
+    peer_send_thread = threading.Thread(target=peer_send)
     
     # Start all threads    
     server_thread.start()
-    # peer_send_thread.start()
-    # for i in range (len(peernames)):
-    #     peer_recv_thread[i].start()
+    peer_send_thread.start()
+    for i in range (len(peernames)):
+        peer_recv_thread[i].start()
 
     # #Join all threads
     server_thread.join()
-    # peer_send_thread.join()
-    # for i in range (len(peernames)):
-    #     peer_recv_thread[i].join()
+    peer_send_thread.join()
+    for i in range (len(peernames)):
+        peer_recv_thread[i].join()
 
         
     #Close all connections
-    # for i in range (len(peernames)):
-    #     peer_sockets_recv[i].close()
-    # me_as_server_socket.close()
+    for i in range (len(peernames)):
+        peer_sockets_recv[i].close()
+    me_as_server_socket.close()
     
     f = open("test.txt", 'w')
     te=time.time()
