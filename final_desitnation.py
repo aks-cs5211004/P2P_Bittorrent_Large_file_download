@@ -5,7 +5,7 @@ import time
 from socket import *
 
 # Vayu server
-servername='10.17.51.115'
+servername='10.17.6.5'
 serverport=9801
 server_socket = socket(AF_INET, SOCK_STREAM)
 
@@ -15,15 +15,15 @@ lock2 = threading.Lock()
 lock3 = threading.Lock()
 # Me acting as server
 # SWAP HERE
-me_as_server_port=9011
+me_as_server_port=7801
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
 
-peernames=["10.184.60.82"]
+peernames=["10.184.60.82", "10.184.27.121"]
 # Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[9011,9011]
+peer_s_server_ports=[7801, 7801]
 # First port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -49,7 +49,7 @@ def server_connect():
             continue
     
 def server_recv():
-    global lines,lst,unique
+    global lines,lst,unique,most_recent
     while (lines < 1000):
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
@@ -57,14 +57,16 @@ def server_recv():
         lock1.acquire()
         st=server_socket.recv(4096).decode()
         tmp = st.split("\n")
-        if (len(tmp) > 2):
-            if (tmp[0].isnumeric() and lst[int(tmp[0])]==""):
-                s = tmp[0]+"\n"+tmp[1]+"\n"
-                unique.remove(int(tmp[0]))
-                lst[int(tmp[0])] = s
-                lines+=1
-                global most_recent
-                most_recent = s
+        i=0
+        if(len(tmp)%2==1 and len(tmp) > 2):
+            while (i<len(tmp)):
+                if (tmp[i].isnumeric() and lst[int(tmp[i])]==""):
+                    s = tmp[i]+"\n"+tmp[i+1]+"\n"
+                    unique.remove(int(tmp[i]))
+                    lst[int(tmp[i])] = s
+                    lines+=1
+                    most_recent = s
+                i+=2
 
         print("SERVER: ", lines)
         lock1.release()
@@ -141,13 +143,17 @@ def peer_recv(i):
         
 
         # print("Received from...........................  peer........."+ sentence)
+        j = 0
         if (st != "Hello" and st!=""):
             tmp = st.split("\n")
-            if (len(tmp) > 2 and tmp[0].isnumeric() and lst[int(tmp[0])]==""):
-                s = tmp[0]+"\n"+tmp[1]+"\n"
-                lst[int(tmp[0])] = s
-                unique.remove(int(tmp[0]))
-                lines+=1
+            if(len(tmp)%2==1 and len(tmp) > 2):
+                while (j<len(tmp)):
+                    if (tmp[j].isnumeric() and lst[int(tmp[j])]==""):
+                        s = tmp[j]+"\n"+tmp[j+1]+"\n"
+                        unique.remove(int(tmp[j]))
+                        lst[int(tmp[j])] = s
+                        lines+=1
+                    j+=2
         
         print("PEER:",lines)
         lock3.release()
@@ -177,11 +183,14 @@ def SUBMIT():
     print("loop ends")
     st=submit_socket.recv(4096).decode()
     print(st)
+    submit_socket.send("SEND INCORRECT LINES\n".encode())
+    st=submit_socket.recv(9000).decode()
+    print(st)
     submit_socket.close()    
 
 def main():
 
-    #Make Initial connections
+    # Make Initial connections
     server_connect()
     deploy_server()
     time.sleep(5)
@@ -189,7 +198,7 @@ def main():
     
     ts=time.time()
     
-    #Make threads
+    # Make threads
     server_thread= threading.Thread(target=server_recv)
     peer_recv_thread = []
     for i in range (len(peernames)):
@@ -202,20 +211,19 @@ def main():
     for i in range (len(peernames)):
         peer_recv_thread[i].start()
 
-    # #Join all threads
+    # Join all threads
     server_thread.join()
     peer_send_thread.join()
     for i in range (len(peernames)):
         peer_recv_thread[i].join()
 
         
-    #Close all connections
-    server_socket.close()
+    # Close all connections
     for i in range (len(peernames)):
         peer_sockets_recv[i].close()
     me_as_server_socket.close()
     
-    f = open("test.txt", 'w')
+    f = open("incorect_test.txt", 'w')
     te=time.time()
     for i in lst:
         f.write(i)
