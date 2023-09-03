@@ -5,7 +5,7 @@ import time
 from socket import *
 
 # Vayu server
-servername='10.17.6.5'
+servername='10.17.7.134'
 serverport=9801
 server_socket = socket(AF_INET, SOCK_STREAM)
 
@@ -15,15 +15,15 @@ lock2 = threading.Lock()
 lock3 = threading.Lock()
 # Me acting as server
 # SWAP HERE
-me_as_server_port=7801
+me_as_server_port=7806
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
 
-peernames=["10.184.60.82", "10.184.27.121"]
+peernames=["10.184.60.82"]
 # Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[7801, 7801]
+peer_s_server_ports=[7806]
 # First port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -120,8 +120,13 @@ def peer_send():
 def connect_peers():
     print("Trying to connect ...")
     for i in range (len(peernames)):
-       peer_sockets_recv[i].connect((peernames[i], peer_s_server_ports[i]))
-       print("connection succesful from: ", peernames[i])
+        while (True):
+            try:
+                peer_sockets_recv[i].connect((peernames[i], peer_s_server_ports[i]))
+                print("connection succesful from: ", peernames[i])
+                break
+            except Exception:
+                continue
 
 def peer_recv(i):
     global lines,lst,unique
@@ -136,7 +141,7 @@ def peer_recv(i):
         
         st = ""
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.5)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.1)
         if ready[0]:
             string = peer_sockets_recv[i].recv(4096)
             st = string.decode()
@@ -190,13 +195,13 @@ def SUBMIT():
 
 def main():
 
+    ts=time.time()
+    
     # Make Initial connections
     server_connect()
     deploy_server()
-    time.sleep(5)
     connect_peers()
     
-    ts=time.time()
     
     # Make threads
     server_thread= threading.Thread(target=server_recv)
