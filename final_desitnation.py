@@ -20,9 +20,14 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
-peernames=["10.194.12.75", "10.194.44.115"]
+# "10.194.44.115"
+peernames=["10.194.12.75"]
 # Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[7810, 7810]
+peer_s_server_ports=[7810]
+
+# Time array
+duration = []
+
 # First port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -48,7 +53,7 @@ def server_connect():
             continue
     
 def server_recv():
-    global lines,lst,unique,most_recent
+    global lines,lst,unique,most_recent,duration
     while (lines < 1000):
         sentence = "SENDLINE\n"
         server_socket.send(sentence.encode())
@@ -64,6 +69,7 @@ def server_recv():
                     unique.remove(int(tmp[i]))
                     lst[int(tmp[i])] = s
                     lines+=1
+                    duration.append(time.time())
                     most_recent = s
                 i+=2
 
@@ -128,7 +134,7 @@ def connect_peers():
                 continue
 
 def peer_recv(i):
-    global lines,lst,unique
+    global lines,lst,,duration
     while (lines < 1000):
         sentence = "SENDLINE\n"
         if(lines>800 and len(unique)>0):
@@ -140,7 +146,7 @@ def peer_recv(i):
         
         st = ""
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.05)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.01)
         if ready[0]:
             string = peer_sockets_recv[i].recv(4096)
             st = string.decode()
@@ -157,6 +163,7 @@ def peer_recv(i):
                         unique.remove(int(tmp[j]))
                         lst[int(tmp[j])] = s
                         lines+=1
+                        duration.append(time.time())
                     j+=2
         
         print("PEER:",i, lines)
@@ -239,5 +246,11 @@ def main():
     print(te-ts)
     f.close()
     SUBMIT() 
+    
+    start = duration[0]
+    for i in range(len(duration)):
+        duration[i] -= start
+    
+    print(duration)
     
 main()
