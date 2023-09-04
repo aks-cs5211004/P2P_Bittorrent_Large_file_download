@@ -5,7 +5,7 @@ import time
 from socket import *
 
 # Vayu server
-servername='10.17.7.134'
+servername='10.17.51.115'
 serverport=9801
 server_socket = socket(AF_INET, SOCK_STREAM)
 
@@ -15,15 +15,14 @@ lock2 = threading.Lock()
 lock3 = threading.Lock()
 # Me acting as server
 # SWAP HERE
-me_as_server_port=7806
+me_as_server_port=7810
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
-
-peernames=["10.184.60.82"]
+peernames=["10.194.12.75", "10.194.44.115"]
 # Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[7806]
+peer_s_server_ports=[7810, 7810]
 # First port is to receive from server, then others from peers
 peer_sockets_recv = []
 for i in range (len(peernames)):
@@ -68,7 +67,7 @@ def server_recv():
                     most_recent = s
                 i+=2
 
-        print("SERVER: ", lines)
+        # print("SERVER: ", lines)
         lock1.release()
 
     server_socket.close()
@@ -131,17 +130,17 @@ def connect_peers():
 def peer_recv(i):
     global lines,lst,unique
     while (lines < 1000):
-        lock3.acquire()
         sentence = "SENDLINE\n"
-        if(lines>800):
+        if(lines>800 and len(unique)>0):
             sentence=str(random.choice(unique))
 
+        lock3.acquire()
         # print("Request........................... sent to peer........."+ sentence)
         peer_sockets_recv[i].send(sentence.encode())
         
         st = ""
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.1)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.05)
         if ready[0]:
             string = peer_sockets_recv[i].recv(4096)
             st = string.decode()
@@ -160,7 +159,7 @@ def peer_recv(i):
                         lines+=1
                     j+=2
         
-        print("PEER:",lines)
+        print("PEER:",i, lines)
         lock3.release()
         
 
@@ -200,6 +199,7 @@ def main():
     # Make Initial connections
     server_connect()
     deploy_server()
+    time.sleep(5)
     connect_peers()
     
     
@@ -228,7 +228,7 @@ def main():
         peer_sockets_recv[i].close()
     me_as_server_socket.close()
     
-    f = open("incorect_test.txt", 'w')
+    f = open("test.txt", 'w')
     te=time.time()
     for i in lst:
         f.write(i)
