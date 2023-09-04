@@ -5,7 +5,7 @@ import time
 from socket import *
 
 # Vayu server
-servername='10.17.51.115'
+servername='vayu.iitd.ac.in'
 serverport=9801
 server_socket = socket(AF_INET, SOCK_STREAM)
 
@@ -15,15 +15,15 @@ lock2 = threading.Lock()
 lock3 = threading.Lock()
 # Me acting as server
 # SWAP HERE
-me_as_server_port=7810
+me_as_server_port=3333
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
 # "10.194.44.115"
-peernames=["10.194.12.75"]
+peernames=["10.184.56.119"]
 # Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[7810]
+peer_s_server_ports=[3333]
 
 # Time array
 duration = []
@@ -73,7 +73,7 @@ def server_recv():
                     most_recent = s
                 i+=2
 
-        # print("SERVER: ", lines)
+        print("SERVER: ", lines)
         lock1.release()
 
     server_socket.close()
@@ -134,7 +134,7 @@ def connect_peers():
                 continue
 
 def peer_recv(i):
-    global lines,lst,,duration
+    global lines, lst, duration
     while (lines < 1000):
         sentence = "SENDLINE\n"
         if(lines>800 and len(unique)>0):
