@@ -94,22 +94,20 @@ def handle_peers(conn,addr):
     while(True):
         lock2.acquire()
         msg=conn.recv(4096).decode()
-        if (mapping[0]==1 and mapping[1]==1 and mapping[2]==1):
-            break
         if (msg=="DISCONNECT\n"):
-            breaking[mapping[addr]] = 1
+            breaking[mapping[addr[0]]] = 1
+            break
         elif (msg.isnumeric() and int(msg)<1000):
             # print("Peer asked me this line................................." + msg )  
             sent=lst[int(msg)]
             conn.send(sent.encode())
             # print("I responded to peer this line................................." + msg )  
-        else:
+        elif (msg == "SENDLINE\n"):
             conn.send(most_recent.encode())
-            
-            
+
         lock2.release()
         
-    conn.close()
+    # conn.close()
     print("Connection closed from: ", addr)
               
 def peer_send():
@@ -178,10 +176,10 @@ def peer_recv(i):
         lock3.release()
         
 
-    breaking[mapping[my_addr]]    
+    breaking[mapping[my_addr]] = 1   
     sentence="DISCONNECT\n"
     peer_sockets_recv[i].send(sentence.encode())
-    peer_sockets_recv[i].close()
+    # peer_sockets_recv[i].close()
     print("Done receiving and closed peer socket: ", peernames[i])
         
 # Submiting answer to server
@@ -239,10 +237,11 @@ def main():
         peer_recv_thread[i].join()
 
         
-    # Close all connections
-    for i in range (len(peernames)):
-        peer_sockets_recv[i].close()
-    me_as_server_socket.close()
+    if (breaking[0]==1 and breaking[1]==1 and breaking[2]==1):
+        # Close all connections
+        for i in range (len(peernames)):
+            peer_sockets_recv[i].close()
+        me_as_server_socket.close()
     
     f = open("test.txt", 'w')
     te=time.time()
