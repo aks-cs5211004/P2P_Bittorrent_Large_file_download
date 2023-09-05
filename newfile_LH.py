@@ -20,8 +20,10 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
-# "10.194.44.115"
+my_addr = "10.194.25.227"
 peernames=["10.194.44.115", "10.194.12.75"]
+mapping = {"10.194.25.227": 0, "10.194.12.75": 1, "10.194.44.115": 2}
+breaking = [0, 0, 0]
 # Here write the me_as_server_ports of your peers (ALL 9801)
 peer_s_server_ports=[5555, 5555]
 
@@ -73,7 +75,7 @@ def server_recv():
                     most_recent = s
                 i+=2
 
-        print("SERVER: ", lines)
+        # print("SERVER: ", lines)
         lock1.release()
 
     server_socket.close()
@@ -87,13 +89,15 @@ def deploy_server():
     print("Server Deployed")
         
 def handle_peers(conn,addr):
-    global most_recent,lst
+    global most_recent,lst,breaking,mapping
     print("New connection established from: ",addr)
     while(True):
         lock2.acquire()
         msg=conn.recv(4096).decode()
-        if (msg=="DISCONNECT\n"):
+        if (mapping[0]==1 and mapping[1]==1 and mapping[2]==1):
             break
+        if (msg=="DISCONNECT\n"):
+            breaking[mapping[addr]] = 1
         elif (msg.isnumeric() and int(msg)<1000):
             # print("Peer asked me this line................................." + msg )  
             sent=lst[int(msg)]
@@ -101,6 +105,8 @@ def handle_peers(conn,addr):
             # print("I responded to peer this line................................." + msg )  
         else:
             conn.send(most_recent.encode())
+            
+            
         lock2.release()
         
     conn.close()
@@ -115,6 +121,8 @@ def peer_send():
     
     for t in thread_for_clients:
         t.start()
+
+    for t in thread_for_clients:
         t.join()
 
     me_as_server_socket.close()
@@ -134,7 +142,7 @@ def connect_peers():
                 continue
 
 def peer_recv(i):
-    global lines,lst,duration
+    global lines,lst,duration,mapping,breaking,my_addr
     while (lines < 1000):
         sentence = "SENDLINE\n"
         if(lines>800 and len(unique)>0):
@@ -170,6 +178,7 @@ def peer_recv(i):
         lock3.release()
         
 
+    breaking[mapping[my_addr]]    
     sentence="DISCONNECT\n"
     peer_sockets_recv[i].send(sentence.encode())
     peer_sockets_recv[i].close()
