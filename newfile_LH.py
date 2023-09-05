@@ -15,7 +15,7 @@ lock2 = threading.Lock()
 lock3 = threading.Lock()
 # Me acting as server
 # SWAP HERE
-me_as_server_port=5555
+me_as_server_port=6666
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
@@ -25,7 +25,7 @@ peernames=["10.194.44.115", "10.194.12.75"]
 mapping = {"10.194.25.227": 0, "10.194.12.75": 1, "10.194.44.115": 2}
 breaking = [0, 0, 0]
 # Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[5555, 5555]
+peer_s_server_ports=[6666, 6666]
 
 # Time array
 duration = []
@@ -95,6 +95,8 @@ def handle_peers(conn,addr):
         lock2.acquire()
         msg=conn.recv(4096).decode()
         if (msg=="DISCONNECT\n"):
+            ack = "DONE\n"
+            conn.send(ack.encode())
             breaking[mapping[addr[0]]] = 1
             print(breaking)
             break
@@ -160,7 +162,7 @@ def peer_recv(i):
         
         st = ""
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.01)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.1)
         if ready[0]:
             string = peer_sockets_recv[i].recv(4096)
             st = string.decode()
@@ -189,7 +191,7 @@ def peer_recv(i):
         sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.01)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.1)
         if ready[0]:
             string = peer_sockets_recv[i].recv(4096)
             st = string.decode()
@@ -256,7 +258,7 @@ def main():
 
     print("done threads")
         
-    global breaking    
+    global breaking
     while (True):
         if (breaking[0]==1 and breaking[1]==1 and breaking[2]==1):
             # Close all connections
