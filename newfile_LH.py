@@ -5,7 +5,7 @@ import time
 from socket import *
 
 # Vayu server
-servername='10.17.7.218'
+servername='10.17.6.5'
 serverport=9801
 server_socket = socket(AF_INET, SOCK_STREAM)
 
@@ -16,7 +16,7 @@ lock3 = threading.Lock()
 lock4 = threading.Lock()
 
 # Me acting as server
-me_as_server_port=8881
+me_as_server_port=8882
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
@@ -30,7 +30,7 @@ breaking = [0, 0, 0]
 # breaking = [0, 0]
 
 # Here write the me_as_server_ports of your peers
-peer_s_server_ports=[8881, 8881]
+peer_s_server_ports=[8882, 8882]
 # peer_s_server_ports=[8881]
 
 # Time array
@@ -109,7 +109,12 @@ def server_recv():
         lock1.release()
 
     breaking[mapping[my_addr]] = 1
+    start = duration[0]
+    for i in range(len(duration)):
+        duration[i] -= start
+    
     SUBMIT()
+    print(duration)
     server_socket.close()
     print("Server Sokcet Closed")
 
@@ -159,8 +164,8 @@ def peer_send():
         t.join()
 
     # me_as_server_socket.close()
-    for i in range (len(peernames)):
-        sockets[i].close()
+    # for i in range (len(peernames)):
+    #     sockets[i].close()
     print("Done sending peers, Ready to terminate ...")
 
 
@@ -188,7 +193,7 @@ def peer_recv(i):
         
         st = ""
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.05)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.01)
         if ready[0]:
             string = peer_sockets_recv[i].recv(4096)
             st = string.decode()
@@ -217,13 +222,13 @@ def peer_recv(i):
         sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
 
-        st = ""
+        st = "HELLO"
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.05)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.01)
         if ready[0]:
             string = peer_sockets_recv[i].recv(4096)
             st = string.decode()
-        if (st == "DONE\n"): 
+        if (st != "HELLO"): 
             break
         lock4.release()
         
@@ -233,7 +238,6 @@ def peer_recv(i):
 
 def main():
 
-    ts=time.time()
     
     # Make Initial connections
     server_connect()
@@ -241,6 +245,7 @@ def main():
     time.sleep(5)
     connect_peers()
     
+    ts=time.time()
     
     # Make threads
     server_thread= threading.Thread(target=server_recv)
@@ -295,11 +300,7 @@ def main():
                 peer_sockets_recv[i].close()
             me_as_server_socket.close()
             break
-    
-    
-    start = duration[0]
-    for i in range(len(duration)):
-        duration[i] -= start
+
     
     print(duration)
     
