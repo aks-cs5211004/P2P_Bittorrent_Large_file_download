@@ -67,8 +67,8 @@ annotation_text = f'({last_index}, {last_value:.2f})'
 plt.annotate(annotation_text, xy=(last_index, last_value), xytext=(last_index - 200, last_value + 0.02),
              arrowprops=dict(arrowstyle="->"))
 
-# Save the plot as a JPEG file in the "plots" folder
-plt.savefig(plot_filename, format='jpg')  # Specify the format as 'jpg'
+# Increase the resolution (DPI) of the saved plot image
+plt.savefig(plot_filename, format='jpg', dpi=2500)  # Specify the DPI value (e.g., 300)
 
 print(f"Plot saved as {plot_filename}")
 
