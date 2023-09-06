@@ -14,6 +14,7 @@ lock1 = threading.Lock()
 lock2 = threading.Lock()
 lock3 = threading.Lock()
 lock4 = threading.Lock()
+lock5 = threading.Lock()
 
 # Me acting as server
 me_as_server_port=8885
@@ -49,7 +50,7 @@ lines = 0
 
 # Submiting answer to server
 def SUBMIT():
-    time.sleep(1)
+    lock5.acquire()
     server_socket.send("SUBMIT\n".encode())
     print("Wrote submit")
     server_socket.send(("cs1210793@blue_dictators\n").encode())
@@ -69,6 +70,7 @@ def SUBMIT():
     server_socket.send("SEND INCORRECT LINES\n".encode())
     st=server_socket.recv(9000).decode()
     print(st)
+    lock5.release()
 
 #SERVER FUNCTIONS
 def server_connect():
@@ -213,22 +215,21 @@ def peer_recv(i):
         lock3.release()
         
     # SUBMIT()    
-    peer_sockets_recv[i].close()
-    # lock4.acquire()
-    # breaking[mapping[my_addr]] = 1   
-    # while(True):
-    #     sentence="DISCONNECT\n"
-    #     peer_sockets_recv[i].send(sentence.encode())
+    lock4.acquire()
+    breaking[mapping[my_addr]] = 1   
+    while(True):
+        sentence="DISCONNECT\n"
+        peer_sockets_recv[i].send(sentence.encode())
 
-    #     st = ""
-    #     peer_sockets_recv[i].setblocking(0)
-    #     ready = select.select([peer_sockets_recv[i]], [], [], 0.08)
-    #     if ready[0]:
-    #         string = peer_sockets_recv[i].recv(4096)
-    #         st = string.decode()
-    #     if (st != "DONE\n"): 
-    #         break
-    # lock4.release()
+        st = ""
+        peer_sockets_recv[i].setblocking(0)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.08)
+        if ready[0]:
+            string = peer_sockets_recv[i].recv(4096)
+            st = string.decode()
+        if (st != "DONE\n"): 
+            break
+    lock4.release()
         
     # peer_sockets_recv[i].close()
     # print("Done receiving and closed peer socket: ", peernames[i])
@@ -239,7 +240,6 @@ def main():
     # Make Initial connections
     server_connect()
     deploy_server()
-    time.sleep(5)
     connect_peers()
     
     ts=time.time()
