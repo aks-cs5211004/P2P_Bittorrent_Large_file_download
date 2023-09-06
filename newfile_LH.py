@@ -51,6 +51,29 @@ lines = 0
 
 # Functions
 
+# Submiting answer to server
+def SUBMIT():
+    # submit_socket= socket(AF_INET, SOCK_STREAM)
+    # submit_socket.connect((servername, serverport))
+    server_socket.send("SUBMIT\n".encode())
+    print("Wrote submit")
+    server_socket.send(("cs1210793@blue_dictators\n").encode())
+    server_socket.send((str(len(lst))+"\n").encode())
+    print("Submitted no. of lines")
+    i=0
+    st=""
+    while(i<len(lst)):
+        st+=lst[i]
+        i+=1
+    server_socket.send(st.encode())
+    print("SUBMITTED LINE", i)
+    print("loop ends")
+    st=server_socket.recv(4096).decode()
+    print(st)
+    server_socket.send("SEND INCORRECT LINES\n".encode())
+    st=server_socket.recv(9000).decode()
+    print(st)
+
 #SERVER FUNCTIONS
 def server_connect():
     while(True):
@@ -86,6 +109,7 @@ def server_recv():
         lock1.release()
 
     breaking[mapping[my_addr]] = 1
+    SUBMIT()
     server_socket.close()
     print("Server Sokcet Closed")
 
@@ -102,6 +126,7 @@ def handle_peers(conn,addr):
     while(True):
         lock2.acquire()
         msg=conn.recv(4096).decode()
+        print(msg)
         if (msg=="DISCONNECT\n"):
             ack = "DONE\n"
             conn.send(ack.encode())
@@ -202,32 +227,9 @@ def peer_recv(i):
             break
         lock4.release()
         
+        
     # peer_sockets_recv[i].close()
     print("Done receiving and closed peer socket: ", peernames[i])
-        
-# Submiting answer to server
-def SUBMIT():
-    submit_socket= socket(AF_INET, SOCK_STREAM)
-    submit_socket.connect((servername, serverport))
-    submit_socket.send("SUBMIT\n".encode())
-    print("Wrote submit")
-    submit_socket.send(("cs1210793@blue_dictators\n").encode())
-    submit_socket.send((str(len(lst))+"\n").encode())
-    print("Submitted no. of lines")
-    i=0
-    st=""
-    while(i<len(lst)):
-        st+=lst[i]
-        i+=1
-    submit_socket.send(st.encode())
-    print("SUBMITTED LINE", i)
-    print("loop ends")
-    st=submit_socket.recv(4096).decode()
-    print(st)
-    submit_socket.send("SEND INCORRECT LINES\n".encode())
-    st=submit_socket.recv(9000).decode()
-    print(st)
-    submit_socket.close()    
 
 def main():
 
@@ -283,7 +285,7 @@ def main():
     print(len(lst))
     print(te-ts)
     f.close()
-    SUBMIT() 
+    # SUBMIT() 
     
     global breaking
     while (True):
