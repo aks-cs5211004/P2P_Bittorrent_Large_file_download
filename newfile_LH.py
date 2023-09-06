@@ -22,15 +22,15 @@ me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 # Me receiving from peers DISTINCT PEER NAMES
 my_addr = "10.194.11.213"
-peernames=["10.194.44.115", "10.194.12.75"]
-# peernames=["10.194.12.75"]
-mapping = {"10.194.11.213": 0, "10.194.12.75": 1, "10.194.44.115": 2}
+peernames=["10.194.12.75"]
+# peernames=["10.194.12.75"]  "10.194.7.164": 3 , "10.194.44.115": 2
+mapping = {"10.194.11.213": 0, "10.194.12.75": 1}
 # mapping = {"10.194.11.213": 0, "10.194.12.75": 1}
-breaking = [0, 0, 0]
+breaking = [0, 0]
 # breaking = [0, 0]
 
 # Here write the me_as_server_ports of your peers
-peer_s_server_ports=[8882, 8882]
+peer_s_server_ports=[8882]
 # peer_s_server_ports=[8881]
 
 # Time array
@@ -130,19 +130,22 @@ def handle_peers(conn,addr):
     print("New connection established from: ",addr)
     while(True):
         lock2.acquire()
-        msg=conn.recv(4096).decode()
+        msg=conn.recv(100).decode()
         print(msg)
         if (msg=="DISCONNECT\n"):
+            breaking[mapping[addr[0]]] = 1
             ack = "DONE\n"
             conn.send(ack.encode())
-            breaking[mapping[addr[0]]] = 1
             print(breaking)
             break
         elif (msg.isnumeric() and int(msg)<1000):
-            sent=lst[int(msg)]
-            conn.send(sent.encode())
-        else:
+            line=lst[int(msg)]
+            conn.send(line.encode())
+        elif (msg == "SENDLINE\n"):
             conn.send(most_recent.encode())
+        else:
+            line = random.choice(lst)
+            conn.send(line.encode())
 
         lock2.release()
         
@@ -212,7 +215,7 @@ def peer_recv(i):
                         duration.append(time.time())
                     j+=2
         
-        print("PEER:",i, lines)
+                print("PEER:",i, lines)
         lock3.release()
         
 
@@ -222,13 +225,13 @@ def peer_recv(i):
         sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
 
-        st = "HELLO"
+        st = ""
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.01)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.1)
         if ready[0]:
             string = peer_sockets_recv[i].recv(4096)
             st = string.decode()
-        if (st != "HELLO"): 
+        if (st != "DONE\n"): 
             break
         lock4.release()
         
@@ -256,15 +259,16 @@ def main():
     
     # Start all threads    
     server_thread.start()
-    peer_send_thread.start()
     for i in range (len(peernames)):
         peer_recv_thread[i].start()
+    peer_send_thread.start()
 
     # Join all threads
     server_thread.join()
-    peer_send_thread.join()
     for i in range (len(peernames)):
         peer_recv_thread[i].join()
+    peer_send_thread.join()
+    
 
     print("done threads")
         
