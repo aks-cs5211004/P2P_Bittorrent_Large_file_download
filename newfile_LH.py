@@ -16,21 +16,21 @@ lock3 = threading.Lock()
 lock4 = threading.Lock()
 
 # Me acting as server
-me_as_server_port=8882
+me_as_server_port=8883
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
 my_addr = "10.194.11.213"
 peernames=["10.194.12.75"]
-# peernames=["10.194.12.75"]  "10.194.7.164": 3 , "10.194.44.115": 2
-mapping = {"10.194.11.213": 0, "10.194.12.75": 1}
+# peernames=["10.194.12.75"]  "10.194.7.164": 3 , 
+mapping = {"10.194.11.213": 0, "10.194.12.75": 1, "10.194.44.115": 2}
 # mapping = {"10.194.11.213": 0, "10.194.12.75": 1}
 breaking = [0, 0]
 # breaking = [0, 0]
 
 # Here write the me_as_server_ports of your peers
-peer_s_server_ports=[8882]
+peer_s_server_ports=[8883]
 # peer_s_server_ports=[8881]
 
 # Time array
@@ -113,8 +113,8 @@ def server_recv():
     for i in range(len(duration)):
         duration[i] -= start
     
-    SUBMIT()
-    print(duration)
+    # SUBMIT()
+    # print(duration)
     server_socket.close()
     print("Server Sokcet Closed")
 
@@ -131,7 +131,6 @@ def handle_peers(conn,addr):
     while(True):
         lock2.acquire()
         msg=conn.recv(100).decode()
-        print(msg)
         if (msg=="DISCONNECT\n"):
             breaking[mapping[addr[0]]] = 1
             ack = "DONE\n"
@@ -294,7 +293,7 @@ def main():
     print(len(lst))
     print(te-ts)
     f.close()
-    # SUBMIT() 
+    SUBMIT() 
     
     global breaking
     while (True):
