@@ -5,7 +5,7 @@ import time
 from socket import *
 
 # Vayu server
-servername='10.17.51.115'
+servername='10.17.7.218'
 serverport=9801
 server_socket = socket(AF_INET, SOCK_STREAM)
 
@@ -14,19 +14,24 @@ lock1 = threading.Lock()
 lock2 = threading.Lock()
 lock3 = threading.Lock()
 lock4 = threading.Lock()
+
 # Me acting as server
-# SWAP HERE
-me_as_server_port=7777
+me_as_server_port=8881
 me_as_server_socket= socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
-my_addr = "10.194.25.227"
+my_addr = "10.194.11.213"
 peernames=["10.194.44.115", "10.194.12.75"]
-mapping = {"10.194.25.227": 0, "10.194.12.75": 1, "10.194.44.115": 2}
+# peernames=["10.194.12.75"]
+mapping = {"10.194.11.213": 0, "10.194.12.75": 1, "10.194.44.115": 2}
+# mapping = {"10.194.11.213": 0, "10.194.12.75": 1}
 breaking = [0, 0, 0]
-# Here write the me_as_server_ports of your peers (ALL 9801)
-peer_s_server_ports=[7777, 7777]
+# breaking = [0, 0]
+
+# Here write the me_as_server_ports of your peers
+peer_s_server_ports=[8881, 8881]
+# peer_s_server_ports=[8881]
 
 # Time array
 duration = []
@@ -37,14 +42,14 @@ for i in range (len(peernames)):
     peer_sockets_recv.append(socket(AF_INET, SOCK_STREAM))
 
 
-#Data Structures
+# Data Structures
 most_recent = "Hello"
 lst = [""]*1000
 unique = [i  for i in range(1000)]
 lines = 0
 
 
-#Functions
+# Functions
 
 #SERVER FUNCTIONS
 def server_connect():
@@ -72,7 +77,7 @@ def server_recv():
                     unique.remove(int(tmp[i]))
                     lst[int(tmp[i])] = s
                     lines+=1
-                    print("total lines so far: ", lines)
+                    # print("total lines so far: ", lines)
                     duration.append(time.time())
                     most_recent = s
                 i+=2
@@ -158,7 +163,7 @@ def peer_recv(i):
         
         st = ""
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.1)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.05)
         if ready[0]:
             string = peer_sockets_recv[i].recv(4096)
             st = string.decode()
@@ -173,11 +178,11 @@ def peer_recv(i):
                         unique.remove(int(tmp[j]))
                         lst[int(tmp[j])] = s
                         lines+=1
-                        print("total lines so far: ", lines)
+                        # print("total lines so far: ", lines)
                         duration.append(time.time())
                     j+=2
         
-        # print("PEER:",i, lines)
+        print("PEER:",i, lines)
         lock3.release()
         
 
@@ -186,7 +191,13 @@ def peer_recv(i):
         lock4.acquire()
         sentence="DISCONNECT\n"
         peer_sockets_recv[i].send(sentence.encode())
-        st = peer_sockets_recv[i].recv(4096).decode()
+
+        st = ""
+        peer_sockets_recv[i].setblocking(0)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.05)
+        if ready[0]:
+            string = peer_sockets_recv[i].recv(4096)
+            st = string.decode()
         if (st == "DONE\n"): 
             break
         lock4.release()
