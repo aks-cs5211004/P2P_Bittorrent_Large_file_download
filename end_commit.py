@@ -5,7 +5,7 @@ import time
 from socket import *
 
 # Vayu server
-servername='10.17.7.218'
+servername='10.17.7.134'
 serverport=9801
 server_socket = socket(AF_INET, SOCK_STREAM)
 
@@ -18,17 +18,17 @@ lock5 = threading.Lock()
 
 # Me acting as server
 me_as_server_port=8885
-me_as_server_socket= socket(AF_INET, SOCK_STREAM)
+me_as_server_socket = socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
-my_addr = "10.194.11.213"
-peernames=["10.194.12.75", "10.194.44.115"]
-mapping = {"10.194.11.213": 0, "10.194.12.75": 1, "10.194.44.115": 2}
-breaking = [0, 0, 0]
+my_addr = "10.184.6.56"
+peernames=["10.184.45.29"]
+mapping = {"10.184.6.56": 0, "10.184.45.29": 1}
+breaking = [0, 0]
 
 # Here write the me_as_server_ports of your peers
-peer_s_server_ports=[8885, 8885]
+peer_s_server_ports=[8885]
 
 # Time array
 duration = []
@@ -87,8 +87,20 @@ def server_recv():
         sentence = "SENDLINE\n"
         lock1.acquire()
         
-        server_socket.send(sentence.encode())
-        st=server_socket.recv(4096).decode()
+        try:
+            server_socket.send(sentence.encode())
+        except Exception:
+            server_connect()
+            server_socket.send(sentence.encode())
+        
+        st = ""
+        try:
+            st=server_socket.recv(4096).decode()
+        except Exception:
+            server_connect()
+            server_socket.send(sentence.encode())
+            st=server_socket.recv(4096).decode()
+
         tmp = st.split("\n")
         i=0
         if(len(tmp)%2==1 and len(tmp) > 2):
@@ -127,21 +139,36 @@ def handle_peers(conn,addr):
     print("New connection established from: ",addr)
     while(True):
         lock2.acquire()
-        msg=conn.recv(100).decode()
+        try:
+            msg=conn.recv(100).decode()
+        except Exception:
+            break
         if (msg=="DISCONNECT\n"):
             breaking[mapping[addr[0]]] = 1
             ack = "DONE\n"
-            conn.send(ack.encode())
+            try:
+                conn.send(ack.encode())
+            except Exception:
+                break
             # print(breaking)
             break
         elif (msg.isnumeric() and int(msg)<1000):
             line=lst[int(msg)]
-            conn.send(line.encode())
+            try:
+                conn.send(line.encode())
+            except Exception:
+                break
         elif (msg == "SENDLINE\n"):
-            conn.send(most_recent.encode())
+            try:
+                conn.send(most_recent.encode())
+            except Exception:
+                break
         else:
             line = random.choice(lst)
-            conn.send(line.encode())
+            try:
+                conn.send(line.encode())
+            except Exception:
+                break
 
         lock2.release()
         
@@ -149,17 +176,23 @@ def handle_peers(conn,addr):
     # print("Connection closed from: ", addr)
               
 def peer_send():
-    thread_for_clients = []
-    sockets = []
-    for i in range (len(peernames)):
-        connectionSocket,addr=me_as_server_socket.accept()
-        sockets.append(connectionSocket)
-        thread_for_clients.append(threading.Thread(target=handle_peers,args=(connectionSocket,addr)))
+    # thread_for_clients = []
+    # sockets = []
+    # for i in range (len(peernames)):
+    #     connectionSocket,addr=me_as_server_socket.accept()
+    #     sockets.append(connectionSocket)
+    #     thread_for_clients.append(threading.Thread(target=handle_peers,args=(connectionSocket,addr)))
     
-    for t in thread_for_clients:
-        t.start()
+    # for t in thread_for_clients:
+    #     t.start()
 
-    for t in thread_for_clients:
+    # for t in thread_for_clients:
+    #     t.join()
+    
+    while (True):
+        connectionSocket,addr=me_as_server_socket.accept()
+        t = threading.Thread(target=handle_peers,args=(connectionSocket,addr))
+        t.start()
         t.join()
 
     # me_as_server_socket.close()
@@ -169,6 +202,16 @@ def peer_send():
 
 
 #RECEIVING FROM MY PEERS FUNCTIONS
+def connect_peer_i(i):
+    while (True):
+        try:
+            peer_sockets_recv[i].connect((peernames[i], peer_s_server_ports[i]))
+            print("connection succesful from: ", peernames[i])
+            break
+        except Exception:
+            continue
+
+
 def connect_peers():
     print("Trying to connect ...")
     for i in range (len(peernames)):
@@ -188,15 +231,26 @@ def peer_recv(i):
             sentence=str(random.choice(unique))
 
         lock3.acquire()
-        peer_sockets_recv[i].send(sentence.encode())
+        try:
+            peer_sockets_recv[i].send(sentence.encode())
+        except Exception:
+            connect_peer_i(i)
+            peer_sockets_recv[i].send(sentence.encode())
+            
         
         st = ""
         peer_sockets_recv[i].setblocking(0)
         ready = select.select([peer_sockets_recv[i]], [], [], 0.05)
         if ready[0]:
-            string = peer_sockets_recv[i].recv(4096)
-            st = string.decode()
-        
+            try:
+                string = peer_sockets_recv[i].recv(4096)
+                st = string.decode()
+            except Exception:
+                connect_peer_i(i)
+                peer_sockets_recv[i].send(sentence.encode())
+                string = peer_sockets_recv[i].recv(4096)
+                st = string.decode()
+
         j = 0
         if (st != "Hello" and st!=""):
             tmp = st.split("\n")
