@@ -7,7 +7,9 @@ from socket import *
 # Vayu server
 servername='vayu.iitd.ac.in'
 serverport=9801
+submitport=5000
 server_socket = socket(AF_INET, SOCK_STREAM)
+submit_socket = socket(AF_INET, SOCK_STREAM)
 
 # Locks
 lock1 = threading.Lock()
@@ -26,12 +28,12 @@ my_addr = "10.194.28.196"
 ip1 = "10.194.29.215"
 ip2 = "10.194.42.147"
 ip3 = "10.194.2.72"
-peernames=[ip2]
+peernames=[ip1, ip2, ip3]
 # mapping = {my_addr: 0, ip1: 1, ip2: 2, ip3: 3}
 # breaking = [0, 0, 0, 0]
 
 # Here write the me_as_server_ports of your peers
-peer_s_server_ports=[9998]
+peer_s_server_ports=[9998, 9998 , 9998]
 
 # Time array
 duration = []
@@ -54,24 +56,25 @@ lines = 0
 # Submiting answer to server
 def SUBMIT():
     lock5.acquire()
-    server_socket.send("SUBMIT\n".encode())
+    submit_socket.connect((servername, submitport))
+    submit_socket.send("SUBMIT\n".encode())
     print("Wrote submit")
-    server_socket.send(("cs1210793@blue_dictators\n").encode())
-    server_socket.send((str(len(lst))+"\n").encode())
+    submit_socket.send(("cs1210793@blue_dictators\n").encode())
+    submit_socket.send((str(len(lst))+"\n").encode())
     print("Submitted no. of lines")
     i=0
     st=""
     while(i<len(lst)):
-        server_socket.send(lst[i].encode())
+        submit_socket.send(lst[i].encode())
         i+=1
 
     print("SUBMITTED LINE", i)
     print("loop ends")
-    st=server_socket.recv(4096).decode()
+    st=submit_socket.recv(4096).decode()
     tmp = st.split("\n")
     print(tmp[-2]+"\n")
-    server_socket.send("SEND INCORRECT LINES\n".encode())
-    st=server_socket.recv(9000).decode()
+    submit_socket.send("SEND INCORRECT LINES\n".encode())
+    st=submit_socket.recv(9000).decode()
     print(st)
     lock5.release()
 
@@ -117,7 +120,7 @@ def server_recv():
                     most_recent = s
                 i+=2
 
-        print("SERVER: ", lines)
+        # print("SERVER: ", lines)
         lock1.release()
 
     # breaking[mapping[my_addr]] = 1
@@ -127,7 +130,7 @@ def server_recv():
     
     SUBMIT()
     print(duration)
-    server_socket.close()
+    # server_socket.close()
     print("Server Sokcet Closed")
 
         
@@ -228,9 +231,9 @@ def connect_peers():
 
 def peer_recv(i):
     global lines,lst,duration,mapping,breaking,my_addr
-    while (lines < 1000):
+    while (True):
         sentence = "SENDLINE\n"
-        if(lines>800 and len(unique)>0):
+        if(lines>700 and len(unique)>0):
             sentence=str(random.choice(unique))
 
         lock3.acquire()
@@ -243,7 +246,7 @@ def peer_recv(i):
         
         st = ""
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.05)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.01)
         if ready[0]:
             try:
                 string = peer_sockets_recv[i].recv(4096)
