@@ -22,16 +22,16 @@ me_as_server_socket = socket(AF_INET, SOCK_STREAM)
 
 
 # Me receiving from peers DISTINCT PEER NAMES
-my_addr = "10.184.36.163"
-ip1 = "10.184.9.10"
-ip2 = "10.184.23.207"
-ip3 = "10.194.9.19"
-peernames=[ip1, ip2, ip3]
-mapping = {my_addr: 0,  ip3: 1}
-breaking = [0, 0]
+my_addr = "10.194.28.196"
+ip1 = "10.194.29.215"
+ip2 = "10.194.42.147"
+ip3 = "10.194.2.72"
+peernames=[ip2]
+# mapping = {my_addr: 0, ip1: 1, ip2: 2, ip3: 3}
+# breaking = [0, 0, 0, 0]
 
 # Here write the me_as_server_ports of your peers
-peer_s_server_ports=[9998, 9998, 9998]
+peer_s_server_ports=[9998]
 
 # Time array
 duration = []
@@ -117,7 +117,7 @@ def server_recv():
                     most_recent = s
                 i+=2
 
-        # print("SERVER: ", lines)
+        print("SERVER: ", lines)
         lock1.release()
 
     # breaking[mapping[my_addr]] = 1
@@ -243,7 +243,7 @@ def peer_recv(i):
         
         st = ""
         peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.03)
+        ready = select.select([peer_sockets_recv[i]], [], [], 0.05)
         if ready[0]:
             try:
                 string = peer_sockets_recv[i].recv(4096)
@@ -268,25 +268,25 @@ def peer_recv(i):
                         duration.append(time.time())
                     j+=2
         
-                # print("PEER:",i, lines)
+                print("PEER:",i, lines)
         lock3.release()
         
     # SUBMIT()    
-    lock4.acquire()
+    # lock4.acquire()
     # breaking[mapping[my_addr]] = 1   
-    while(True):
-        sentence="DISCONNECT\n"
-        peer_sockets_recv[i].send(sentence.encode())
+    # while(True):
+    #     sentence="DISCONNECT\n"
+    #     peer_sockets_recv[i].send(sentence.encode())
 
-        st = ""
-        peer_sockets_recv[i].setblocking(0)
-        ready = select.select([peer_sockets_recv[i]], [], [], 0.08)
-        if ready[0]:
-            string = peer_sockets_recv[i].recv(4096)
-            st = string.decode()
-        if (st != "DONE\n"): 
-            break
-    lock4.release()
+    #     st = ""
+    #     peer_sockets_recv[i].setblocking(0)
+    #     ready = select.select([peer_sockets_recv[i]], [], [], 0.08)
+    #     if ready[0]:
+    #         string = peer_sockets_recv[i].recv(4096)
+    #         st = string.decode()
+    #     if (st != "DONE\n"): 
+    #         break
+    # lock4.release()
         
     # peer_sockets_recv[i].close()
     # print("Done receiving and closed peer socket: ", peernames[i])
@@ -323,7 +323,7 @@ def main():
 
     print("done threads")
         
-    global breaking
+    # global breaking
     # while (True):
     #     if (breaking[0]==1 and breaking[1]==1 and breaking[2]==1):
     #         # Close all connections
